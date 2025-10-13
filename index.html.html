@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin UI - Points Calculation Logic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/@alpinejs/ui@3.13.10-beta.0/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-link:hover { background-color: #374151; }
+        .sidebar-link-active { background-color: #4f46e5; }
+        [x-cloak] { display: none !important; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4f46e5; }
+        input:checked + .slider:before { transform: translateX(16px); }
+    </style>
+</head>
+<body class="bg-gray-100" x-data="pointsCalculator()">
+
+    <div class="flex h-screen bg-gray-900 text-white">
+        <!-- Sidebar -->
+        <aside class="w-64 flex-shrink-0">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold tracking-tight flex items-center"><i data-lucide="gem" class="w-7 h-7 mr-2"></i> Loyalty Engine</h1>
+            </div>
+            <nav class="mt-4 px-4">
+                <a @click.prevent="activeView = 'logic'" href="#" class="sidebar-link flex items-center px-4 py-3 rounded-md transition-colors duration-200" :class="{ 'sidebar-link-active': ['logic', 'ruleEditor'].includes(activeView) }">
+                    <i data-lucide="calculator" class="w-5 h-5 mr-3"></i> Calculation Logic
+                </a>
+                <a @click.prevent="activeView = 'tenants'" href="#" class="sidebar-link flex items-center px-4 py-3 mt-2 rounded-md transition-colors duration-200" :class="{ 'sidebar-link-active': activeView === 'tenants' }">
+                    <i data-lucide="shield" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto bg-gray-100 text-gray-800">
+            <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="p-4 flex justify-between items-center">
+                    <div>
+                        <label for="tenant-switcher" class="text-sm font-medium text-gray-500">CLIENT / TENANT</label>
+                        <select id="tenant-switcher" x-model="activeTenant" @change="loadLogicForTenant()" class="mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md font-semibold">
+                            <option value="hdfc">HDFC Bank</option>
+                            <option value="idfc">IDFC First Bank</option>
+                            <option value="sbi">SBI</option>
+                            <option value="global">Global (Default)</option>
+                        </select>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-8">
+                <!-- View 1: Calculation Logic -->
+                <div x-show="activeView === 'logic'" x-cloak>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-900" x-text="`${tenants[activeTenant]} Calculation Logic`"></h2>
+                            <p class="text-gray-500 mt-1">Configure the master formula for how earn points are calculated.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 space-y-8 max-w-7xl">
+                        <!-- Step 1: Base Logic & Settings -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-indigo-500">
+                            <div class="flex items-start">
+                                <span class="bg-indigo-600 text-white rounded-full w-8 h-8 text-lg font-bold flex items-center justify-center mr-4 flex-shrink-0">1</span>
+                                <div>
+                                    <h3 class="text-xl font-semibold">Base Logic & Settings</h3>
+                                    <p class="text-gray-500 mt-1">This is the mandatory starting point for all calculations and the foundational rules for the client.</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 pl-12 space-y-6">
+                                <!-- Tenant Level Settings -->
+                                <div class="bg-gray-50 p-4 rounded-lg border">
+                                    <h4 class="font-semibold flex items-center"><i data-lucide="settings-2" class="w-5 h-5 mr-2 text-gray-600"></i> Tenant-Level Settings</h4>
+                                    <div class="mt-4">
+                                        <label class="font-medium text-sm">Points Eligibility on Payment</label>
+                                        <p class="text-xs text-gray-500 mb-1">Can customers earn points if they pay for part of an order with existing points?</p>
+                                        <select x-model="logic.settings.paymentEligibility" class="w-full max-w-md mt-1 p-2 border border-gray-300 rounded-md">
+                                            <option value="card_only">Card / Cash Only (No Points Burn)</option>
+                                            <option value="allow_mixed">Allow Mixed Payment (Card + Points)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Base Calculation -->
+                                <div class="bg-gray-50 p-4 rounded-lg border">
+                                     <h4 class="font-semibold flex items-center"><i data-lucide="function-square" class="w-5 h-5 mr-2 text-gray-600"></i> Base Calculation Formula</h4>
+                                    <div class="mt-4 flex items-center space-x-4">
+                                        <span class="font-medium text-lg">Points =</span>
+                                        <select x-model="logic.base.priceSource" class="p-2 border border-gray-300 rounded-md">
+                                            <option value="selling_price">Product Selling Price</option>
+                                            <option value="mrp">Product MRP</option>
+                                        </select>
+                                        <span class="font-medium text-2xl">&times;</span>
+                                        <input type="number" step="0.01" x-model="logic.base.multiplier" class="w-32 p-2 border border-gray-300 rounded-md" placeholder="e.g., 1 or 0.5">
+                                        <span class="text-gray-600">(Base Multiplier)</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end pt-4 border-t">
+                                    <button class="bg-indigo-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-indigo-700">Save Base Logic</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Adjustment Rules -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-gray-300">
+                             <div class="flex items-start">
+                                <span class="bg-gray-700 text-white rounded-full w-8 h-8 text-lg font-bold flex items-center justify-center mr-4 flex-shrink-0">2</span>
+                                <div>
+                                    <h3 class="text-xl font-semibold">Adjustment Rules</h3>
+                                    <p class="text-gray-500 mt-1">Add prioritized rules to modify the base calculation for specific promotions or conditions.</p>
+                                </div>
+                                <button @click="createNewRule()" class="ml-auto flex items-center bg-indigo-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors duration-200 shadow-sm">
+                                    <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Create New Rule
+                                </button>
+                            </div>
+                             <div class="mt-6 pl-12">
+                                <!-- Rules List Table -->
+                                <table class="w-full text-left">
+                                    <thead class="bg-gray-50 border-b border-gray-200">
+                                        <tr>
+                                            <th class="p-4 font-semibold text-sm text-gray-600">Priority</th>
+                                            <th class="p-4 font-semibold text-sm text-gray-600">Rule Name</th>
+                                            <th class="p-4 font-semibold text-sm text-gray-600">Conditions</th>
+                                            <th class="p-4 font-semibold text-sm text-gray-600">Action</th>
+                                            <th class="p-4 font-semibold text-sm text-gray-600">Schedule</th>
+                                            <th class="p-4 font-semibold text-sm text-gray-600">Status</th>
+                                            <th class="p-4 font-semibold text-sm text-gray-600"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        <template x-for="(rule, index) in logic.adjustments" :key="rule.id">
+                                            <tr :class="{'bg-yellow-50': rule.validation.hasWarning}">
+                                                <td class="p-4 font-bold text-indigo-600">
+                                                    <div class="flex items-center space-x-2">
+                                                        <span x-text="index + 1"></span>
+                                                        <div x-show="rule.validation.hasWarning" x-cloak class="relative" x-tooltip="rule.validation.message">
+                                                            <i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-500"></i>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="p-4 font-medium" x-text="rule.name"></td>
+                                                <td class="p-4 text-gray-600 text-sm" x-text="`${rule.conditions.length} Condition(s)`"></td>
+                                                <td class="p-4 text-gray-600 text-sm" x-text="formatAction(rule)"></td>
+                                                <td class="p-4 text-gray-600 text-sm" x-text="rule.startDate && rule.endDate ? `${rule.startDate} to ${rule.endDate}` : 'Always Active'"></td>
+                                                <td class="p-4">
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-full" :class="rule.isActive ? 'text-green-800 bg-green-100' : 'text-gray-800 bg-gray-200'" x-text="rule.isActive ? 'Active' : 'Inactive'"></span>
+                                                </td>
+                                                <td class="p-4">
+                                                    <button @click="editRule(index)" class="text-indigo-600 hover:text-indigo-800"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                                                    <button @click="removeAdjustment(index)" class="text-red-500 hover:text-red-700 ml-2"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View 2: Tenant List -->
+                <div x-show="activeView === 'tenants'" x-cloak>
+                    <!-- Tenant List UI remains the same -->
+                     <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-900">Tenants & Clients</h2>
+                            <p class="text-gray-500 mt-1">Manage high-level settings for each client.</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <template x-for="(name, key) in tenants" :key="key">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-indigo-500">
+                                <h3 class="font-bold text-xl" x-text="name"></h3>
+                                <div class="mt-4 space-y-2 text-sm text-gray-600">
+                                    <p><strong x-text="tenantLogics[key].adjustments.length"></strong> Adjustment Rules</p>
+                                    <p><strong x-text="tenantLogics[key].adjustments.filter(r => r.isActive).length"></strong> Active Rules</p>
+                                    <p>Base Multiplier: <strong x-text="tenantLogics[key].base.multiplier"></strong></p>
+                                </div>
+                                <button @click="manageTenant(key)" class="mt-6 w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-md hover:bg-gray-300">Manage Logic</button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- View 3: Rule Editor -->
+                <div x-show="activeView === 'ruleEditor'" x-cloak>
+                    <!-- Rule Editor UI -->
+                    <template x-if="editingRule">
+                        <div>
+                            <div class="flex items-center mb-6">
+                                 <button @click="activeView = 'logic'" class="text-gray-500 hover:text-gray-700 mr-4"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
+                                <div>
+                                    <h2 class="text-3xl font-bold text-gray-900" x-text="editingRule.id === null ? 'Create New Rule' : 'Edit Rule'"></h2>
+                                </div>
+                            </div>
+                            <div class="space-y-8 max-w-7xl">
+                                <!-- Rule Name, Schedule & Status -->
+                                <div class="bg-white p-6 rounded-lg shadow-sm">
+                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                         <div>
+                                             <label class="font-semibold text-sm">Rule Name</label>
+                                             <input type="text" x-model="editingRule.name" placeholder="e.g., Platinum Tier Bonus for Apple Products" class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+                                         </div>
+                                         <div class="flex space-x-4">
+                                             <div>
+                                                <label class="font-semibold text-sm">Start Date (Optional)</label>
+                                                <input type="date" x-model="editingRule.startDate" class="w-full mt-1 p-2 border border-gray-300 rounded-md text-sm">
+                                             </div>
+                                              <div>
+                                                <label class="font-semibold text-sm">End Date (Optional)</label>
+                                                <input type="date" x-model="editingRule.endDate" class="w-full mt-1 p-2 border border-gray-300 rounded-md text-sm">
+                                             </div>
+                                              <div>
+                                                <label class="font-semibold text-sm block mb-2">Status</label>
+                                                <label class="switch">
+                                                    <input type="checkbox" x-model="editingRule.isActive">
+                                                    <span class="slider"></span>
+                                                </label>
+                                             </div>
+                                         </div>
+                                     </div>
+                                </div>
+                                
+                                <!-- Conditions -->
+                                <div class="bg-white p-6 rounded-lg shadow-sm">
+                                    <h3 class="text-lg font-semibold flex items-center mb-4">IF...</h3>
+                                    <div class="flex items-center mb-2">
+                                        <select x-model="editingRule.conditionOperator" class="p-1 border border-gray-300 rounded-md text-sm">
+                                            <option value="AND">ALL (AND)</option>
+                                            <option value="OR">ANY (OR)</option>
+                                        </select>
+                                        <span class="ml-2">of the following conditions are met:</span>
+                                    </div>
+                                    <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
+                                        <div class="pl-4 border-l-2 border-gray-300 space-y-2">
+                                            <template x-for="(cond, condIndex) in editingRule.conditions" :key="condIndex">
+                                                <div class="flex items-center space-x-2">
+                                                    <select x-model="cond.category" class="w-48 p-2 border border-gray-300 rounded-md text-sm">
+                                                        <option>Customer Tier</option>
+                                                        <option>Product Category</option>
+                                                        <option>Product Brand</option>
+                                                        <option>Bank Card Variant</option>
+                                                        <option>Selling Price</option>
+                                                    </select>
+                                                    <!-- Dynamic Operators -->
+                                                    <template x-if="cond.category === 'Selling Price'">
+                                                        <select x-model="cond.operator" class="p-2 border border-gray-300 rounded-md text-sm">
+                                                            <option value=">">&gt;</option>
+                                                            <option value="<">&lt;</option>
+                                                            <option value="BETWEEN">BETWEEN</option>
+                                                        </select>
+                                                    </template>
+                                                    <template x-if="cond.category !== 'Selling Price'">
+                                                         <select x-model="cond.operator" class="p-2 border border-gray-300 rounded-md text-sm">
+                                                            <option>IS</option>
+                                                            <option>IS NOT</option>
+                                                        </select>
+                                                    </template>
+                                                    <input type="text" x-model="cond.value" placeholder="Value (e.g., 10000-20000 for BETWEEN)" class="flex-grow p-2 border border-gray-300 rounded-md text-sm">
+                                                    <button @click="removeEditingCondition(condIndex)" class="text-gray-400 hover:text-red-500 p-1"><i data-lucide="minus-circle" class="w-4 h-4"></i></button>
+                                                </div>
+                                            </template>
+                                            <button @click="addEditingCondition()" class="flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800 pt-1">
+                                                <i data-lucide="plus-circle" class="w-4 h-4 mr-1"></i> Add Condition
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action -->
+                                <div class="bg-white p-6 rounded-lg shadow-sm">
+                                     <h3 class="text-lg font-semibold flex items-center mb-4">THEN...</h3>
+                                     <div class="flex items-center space-x-2">
+                                        <select x-model="editingRule.action" class="p-2 border border-gray-300 rounded-md text-sm">
+                                            <option value="multiply">Multiply Total Points By</option>
+                                            <option value="add">Add Bonus Points</option>
+                                            <option value="set_flat">Set Flat Points</option>
+                                            <option value="percent_of_price">Set as % of Selling Price</option>
+                                        </select>
+                                        <input type="number" step="0.1" x-model="editingRule.actionValue" placeholder="Value (e.g., 1.5 or 0.10)" class="w-48 p-2 border border-gray-300 rounded-md text-sm">
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button @click="saveRule()" class="bg-indigo-600 text-white font-bold px-8 py-3 rounded-md hover:bg-indigo-700">Save Rule</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('pointsCalculator', () => ({
+        activeView: 'logic',
+        activeTenant: 'hdfc',
+        tenants: { 'hdfc': 'HDFC Bank', 'idfc': 'IDFC First Bank', 'sbi': 'SBI', 'global': 'Global (Default)' },
+        editingRule: null,
+        tenantLogics: {
+            hdfc: {
+                settings: { paymentEligibility: 'card_only' },
+                base: { priceSource: 'selling_price', multiplier: 1 },
+                adjustments: [
+                    { id: 1, name: 'Diners Club Smartphone > 20k', isActive: true, startDate: '', endDate: '', conditionOperator: 'AND', conditions: [{ category: 'Bank Card Variant', operator: 'IS', value: 'HDFC Diners Club' }, { category: 'Selling Price', operator: '>', value: '20000' }], action: 'set_flat', actionValue: 2000, validation: {} },
+                    { id: 2, name: 'Millenia Smartphone Range', isActive: true, startDate: '', endDate: '', conditionOperator: 'AND', conditions: [{ category: 'Bank Card Variant', operator: 'IS', value: 'HDFC Millenia' }, { category: 'Selling Price', operator: 'BETWEEN', value: '10000-50000' }], action: 'set_flat', actionValue: 1000, validation: {} },
+                ]
+            },
+            idfc: { settings: { paymentEligibility: 'allow_mixed' }, base: { priceSource: 'mrp', multiplier: 0.8 }, adjustments: [] },
+            sbi: { settings: { paymentEligibility: 'card_only' }, base: { priceSource: 'selling_price', multiplier: 1.2 }, adjustments: [] },
+            global: { settings: { paymentEligibility: 'card_only' }, base: { priceSource: 'selling_price', multiplier: 0.5 }, adjustments: [] }
+        },
+        logic: {},
+        init() { this.loadLogicForTenant(); },
+        loadLogicForTenant() { 
+            this.logic = JSON.parse(JSON.stringify(this.tenantLogics[this.activeTenant]));
+            this.validateAllRules();
+        },
+        manageTenant(tenantKey) {
+            this.activeTenant = tenantKey;
+            this.loadLogicForTenant();
+            this.activeView = 'logic';
+        },
+        createNewRule() {
+            this.editingRule = {
+                id: null, name: '', isActive: true, startDate: '', endDate: '',
+                conditionOperator: 'AND',
+                conditions: [{ category: 'Customer Tier', operator: 'IS', value: '' }],
+                action: 'multiply', actionValue: '',
+                validation: {}
+            };
+            this.activeView = 'ruleEditor';
+        },
+        editRule(index) {
+            this.editingRule = JSON.parse(JSON.stringify(this.logic.adjustments[index]));
+            this.activeView = 'ruleEditor';
+        },
+        saveRule() {
+            if (!this.editingRule.name) {
+                alert('Rule Name is required.');
+                return;
+            }
+            const existingRuleIndex = this.logic.adjustments.findIndex(r => r.id === this.editingRule.id);
+            if (existingRuleIndex !== -1) {
+                this.logic.adjustments[existingRuleIndex] = this.editingRule;
+            } else {
+                this.editingRule.id = Date.now();
+                this.logic.adjustments.push(this.editingRule);
+            }
+            this.activeView = 'logic';
+            setTimeout(() => this.validateAllRules(), 0);
+        },
+        addEditingCondition() { this.editingRule.conditions.push({ category: 'Product Category', operator: 'IS', value: '' }); },
+        removeEditingCondition(index) { this.editingRule.conditions.splice(index, 1); },
+        removeAdjustment(index) { 
+            if (confirm('Are you sure you want to delete this rule?')) {
+                this.logic.adjustments.splice(index, 1);
+                this.validateAllRules();
+            }
+        },
+        formatAction(rule) {
+            if (rule.action === 'percent_of_price') {
+                return `Set as ${rule.actionValue}% of Selling Price`;
+            }
+            return `${rule.action.replace('_', ' ')} by ${rule.actionValue}`;
+        },
+        validateAllRules() {
+             this.logic.adjustments.forEach(rule => rule.validation = { hasWarning: false, message: '' });
+            for (let i = 1; i < this.logic.adjustments.length; i++) {
+                const currentRule = this.logic.adjustments[i];
+                for (let j = 0; j < i; j++) {
+                    const higherPriorityRule = this.logic.adjustments[j];
+                    if (!currentRule.isActive || !higherPriorityRule.isActive) continue;
+                    const higherIsSubset = higherPriorityRule.conditions.every(hCond => 
+                        currentRule.conditions.some(cCond => cCond.category === hCond.category && cCond.operator === hCond.operator && cCond.value.trim().toLowerCase() === hCond.value.trim().toLowerCase())
+                    );
+                    if (higherIsSubset) {
+                        currentRule.validation.hasWarning = true;
+                        currentRule.validation.message = `This rule may be redundant due to the broader conditions in rule #${j + 1} '${higherPriorityRule.name}'.`;
+                        break;
+                    }
+                }
+            }
+        }
+    }));
+});
+// Tooltip directive
+document.addEventListener('alpine:init', () => {
+    Alpine.directive('tooltip', (el, { expression }, { evaluate }) => {
+        let tooltip = document.createElement('div');
+        tooltip.className = 'absolute z-10 p-2 text-xs text-white bg-gray-900 rounded-md -mt-10 -ml-4 w-max max-w-xs hidden';
+        el.append(tooltip);
+        el.addEventListener('mouseenter', () => { 
+            tooltip.textContent = evaluate(expression);
+            tooltip.classList.remove('hidden');
+        });
+        el.addEventListener('mouseleave', () => { tooltip.classList.add('hidden'); });
+    })
+})
+setTimeout(() => { lucide.createIcons(); }, 150);
+</script>
+
+</body>
+</html>
+
