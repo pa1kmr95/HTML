@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Earn Rule Builder v3</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #111827;
+      background: #f3f4f6;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .app-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    header .subtitle {
+      color: #6b7280;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2.3fr) minmax(320px, 1.2fr);
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.08);
+      border: 1px solid #e5e7eb;
+    }
+    .card h2 {
+      font-size: 16px;
+      margin: 0 0 4px 0;
+    }
+    .card h3 {
+      font-size: 14px;
+      margin: 12px 0 4px 0;
+    }
+    .hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px 16px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+    }
+    label {
+      font-weight: 500;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #f9fafb;
+    }
+    textarea {
+      min-height: 48px;
+      resize: vertical;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid #2563eb;
+      outline-offset: 0;
+      border-color: #2563eb;
+      background: #ffffff;
+    }
+    .inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .tag-input {
+      font-size: 12px;
+    }
+    .summary-card {
+      position: sticky;
+      top: 16px;
+    }
+    .summary-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .summary-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #374151;
+      white-space: pre-line;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+    .badge-row {
+      margin-bottom: 8px;
+    }
+    .json-preview {
+      margin-top: 10px;
+      background: #0f172a;
+      color: #e5e7eb;
+      border-radius: 8px;
+      padding: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      max-height: 220px;
+      overflow: auto;
+    }
+    .section-divider {
+      border-top: 1px dashed #e5e7eb;
+      margin: 10px 0;
+    }
+    .edge-note {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    .muted {
+      color: #9ca3af;
+    }
+    .pill-danger {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    .pill-success {
+      background: #ecfdf3;
+      color: #166534;
+    }
+    .pill-warning {
+      background: #fffbeb;
+      color: #92400e;
+    }
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .summary-card {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <header>
+    <div>
+      <h1>Earn Rule Builder</h1>
+      <div class="subtitle">
+        Configure how customers earn loyalty points across clients, tiers, cards, categories, SKUs, margins & payment methods.
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT: FORM -->
+    <div>
+      <!-- GENERAL SETTINGS -->
+      <div class="card">
+        <h2>1. General Settings</h2>
+        <div class="hint">Basic identity of the rule. This is what Finance will see in reports and approvals.</div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="ruleName">Rule name</label>
+            <input id="ruleName" type="text" placeholder="e.g. Gold tier electronics boost" />
+          </div>
+
+          <div class="field">
+            <label for="clientId">Client / Program</label>
+            <select id="clientId">
+              <option value="">Select…</option>
+              <option value="ANY">All clients</option>
+              <option value="BANK_HDFC">Bank – HDFC</option>
+              <option value="BANK_ICICI">Bank – ICICI</option>
+              <option value="NON_BANK_RETAIL">Non-bank – Retail</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="ruleType">Rule type</label>
+            <select id="ruleType">
+              <option value="BASE" selected>Base earn</option>
+              <option value="MULTIPLIER">Multiplier</option>
+              <option value="BONUS">Bonus</option>
+              <option value="CAP">Cap / Limit</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="status">Status</label>
+            <select id="status">
+              <option value="DRAFT">Draft</option>
+              <option value="ACTIVE">Active</option>
+              <option value="PAUSED">Paused</option>
+            </select>
+          </div>
+
+          <div class="field" id="precedenceField">
+            <label for="precedence">Precedence level</label>
+            <select id="precedence"></select>
+            <div class="edge-note" id="precedenceNote">
+              This controls how this rule behaves vs other rules of the same type.
+            </div>
+          </div>
+
+          <div class="field" id="combinationField" style="display:none;">
+            <label for="combinationMode">Combination mode</label>
+            <select id="combinationMode"></select>
+            <div class="edge-note" id="combinationNote">
+              Controls how this rule behaves when multiple rules of the same type match.
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="effectiveFrom">Effective from (order date)</label>
+            <input id="effectiveFrom" type="date" />
+          </div>
+
+          <div class="field">
+            <label for="effectiveTo">Effective to</label>
+            <input id="effectiveTo" type="date" />
+          </div>
+
+          <div class="field">
+            <label>Evergreen / No expiration</label>
+            <div class="inline">
+              <input id="noExpiration" type="checkbox" />
+              <span class="muted">If checked, rule has no end date until manually paused.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:10px;">
+          <label for="ruleDescription">Internal description</label>
+          <textarea id="ruleDescription" placeholder="Short explanation so Finance & Ops understand why this rule exists."></textarea>
+        </div>
+      </div>
+
+      <!-- CONDITIONS -->
+      <div class="card">
+        <h2>2. Conditions – Who / What / When</h2>
+        <div class="hint">Define when this rule should apply. Leave blank to make it more generic.</div>
+
+        <h3>Customer & Card</h3>
+        <div class="form-grid">
+          <div class="field">
+            <label for="tiers">Customer tier(s)</label>
+            <input id="tiers" type="text" class="tag-input" placeholder="e.g. Silver, Gold, Platinum" />
+          </div>
+
+          <div class="field">
+            <label for="segments">Customer segment(s)</label>
+            <input id="segments" type="text" class="tag-input" placeholder="e.g. New, High-value" />
+          </div>
+
+          <div class="field">
+            <label for="cardVariants">Card variant(s)</label>
+            <input id="cardVariants" type="text" class="tag-input" placeholder="e.g. Infinia, Regalia, Signature" />
+          </div>
+
+          <div class="field">
+            <label for="geos">Geography filter</label>
+            <input id="geos" type="text" class="tag-input" placeholder="e.g. India, UAE, Tier-1 cities" />
+          </div>
+        </div>
+
+        <h3>Transaction, Channel & Payment</h3>
+        <div class="form-grid">
+          <div class="field">
+            <label for="channels">Channel(s)</label>
+            <input id="channels" type="text" class="tag-input" placeholder="e.g. App, Web, POS" />
+          </div>
+
+          <div class="field">
+            <label for="minAmount">Min transaction amount</label>
+            <input id="minAmount" type="number" min="0" placeholder="e.g. 1000" />
+          </div>
+
+          <div class="field">
+            <label for="maxAmount">Max transaction amount</label>
+            <input id="maxAmount" type="number" min="0" placeholder="leave blank = no cap" />
+          </div>
+
+          <div class="field">
+            <label for="mccCodes">MCC codes</label>
+            <input id="mccCodes" type="text" class="tag-input" placeholder="e.g. 5411, 5812" />
+          </div>
+
+          <div class="field">
+            <label for="paymentMethod">Payment method</label>
+            <select id="paymentMethod">
+              <option value="">Any</option>
+              <option value="CARD_ONLY">Card only</option>
+              <option value="POINTS_ONLY">Points only</option>
+              <option value="CARD_PLUS_POINTS">Card + Points (hybrid)</option>
+              <option value="WALLET">Wallet</option>
+              <option value="UPI">UPI</option>
+              <option value="NETBANKING">Netbanking</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="earnTrigger">Earn trigger event</label>
+            <select id="earnTrigger">
+              <option value="PAYMENT_SUCCESS">Payment success</option>
+              <option value="ORDER_CONFIRMED">Order confirmed</option>
+              <option value="ORDER_DELIVERED">Order delivered</option>
+              <option value="RETURN_WINDOW_CLOSED">Return window closed</option>
+              <option value="SETTLEMENT_COMPLETED">Settlement completed</option>
+            </select>
+          </div>
+
+          <div class="field" id="returnWindowField" style="display:none;">
+            <label for="returnWindowDays">Return window days</label>
+            <input id="returnWindowDays" type="number" min="1" placeholder="e.g. 7 or 30" />
+          </div>
+
+          <div class="field">
+            <label>Rule date matching</label>
+            <div class="inline">
+              <input id="useOrderDateForMatching" type="radio" name="dateMatching" value="ORDER_DATE" checked />
+              <span class="muted">Use order date</span>
+            </div>
+            <div class="inline">
+              <input id="useTriggerDateForMatching" type="radio" name="dateMatching" value="TRIGGER_DATE" />
+              <span class="muted">Use trigger event date</span>
+            </div>
+          </div>
+        </div>
+
+        <h3>Catalog, Price & SKU</h3>
+        <div class="form-grid">
+          <div class="field">
+            <label for="categories">Product categories</label>
+            <input id="categories" type="text" class="tag-input" placeholder="e.g. Electronics, Travel, Gift cards" />
+          </div>
+
+          <div class="field">
+            <label for="brands">Brand(s)</label>
+            <input id="brands" type="text" class="tag-input" placeholder="e.g. Apple, Samsung" />
+          </div>
+
+          <div class="field">
+            <label for="minSellingPrice">Min selling price</label>
+            <input id="minSellingPrice" type="number" min="0" placeholder="e.g. 10000" />
+          </div>
+
+          <div class="field">
+            <label for="maxSellingPrice">Max selling price</label>
+            <input id="maxSellingPrice" type="number" min="0" placeholder="leave blank = no limit" />
+          </div>
+
+          <div class="field">
+            <label for="minCostPrice">Min cost price</label>
+            <input id="minCostPrice" type="number" min="0" />
+          </div>
+
+          <div class="field">
+            <label for="maxCostPrice">Max cost price</label>
+            <input id="maxCostPrice" type="number" min="0" />
+          </div>
+
+          <div class="field">
+            <label for="minMarginPct">Min margin %</label>
+            <input id="minMarginPct" type="number" min="0" max="100" placeholder="e.g. 20" />
+          </div>
+
+          <div class="field">
+            <label for="maxMarginPct">Max margin %</label>
+            <input id="maxMarginPct" type="number" min="0" max="100" placeholder="leave blank = no limit" />
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <label for="skuList">Specific SKU IDs</label>
+            <textarea id="skuList" placeholder="One SKU ID per line, or comma-separated."></textarea>
+            <div class="edge-note">If filled, this rule is SKU-specific and will usually override generic rules (depending on precedence).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTION CONFIG – varies by rule type -->
+      <div class="card">
+        <h2>3. Action – What does this rule do?</h2>
+        <div class="hint">Configure how many points are earned, multiplied, bonused, or capped.</div>
+
+        <!-- BASE RULE CONFIG -->
+        <div id="actionBase" class="action-block">
+          <h3>Base earn configuration</h3>
+          <div id="baseFormulaBlock">
+            <div class="form-grid">
+              <div class="field">
+                <label for="baseMethod">Base earn method</label>
+                <select id="baseMethod">
+                  <option value="PER_AMOUNT">Points per amount</option>
+                  <option value="FIXED_PER_TXN">Fixed points per transaction</option>
+                  <option value="FIXED_PER_SKU">Fixed points per SKU unit</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="basePoints">Base points</label>
+                <input id="basePoints" type="number" min="0" placeholder="e.g. 1" />
+              </div>
+
+              <div class="field" id="baseAmountUnitField">
+                <label for="baseAmountUnit">Per amount (currency)</label>
+                <input id="baseAmountUnit" type="number" min="1" placeholder="e.g. 100 for 1 point per ₹100" />
+              </div>
+
+              <div class="field">
+                <label for="baseAmountBasis">Base amount basis</label>
+                <select id="baseAmountBasis">
+                  <option value="ELIGIBLE_SPEND">Eligible spend (default)</option>
+                  <option value="SELLING_PRICE">Selling price</option>
+                  <option value="COST_PRICE">Cost price</option>
+                  <option value="MARGIN_VALUE">Margin value (SP - Cost)</option>
+                </select>
+              </div>
+            </div>
+            <div class="edge-note">
+              Example: “1 point per ₹100 of eligible spend” or “1 point per ₹10 of margin value”.
+            </div>
+          </div>
+        </div>
+
+        <!-- MULTIPLIER CONFIG -->
+        <div id="actionMultiplier" class="action-block" style="display:none;">
+          <h3>Multiplier configuration</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="multiplierValue">Multiplier value (X)</label>
+              <input id="multiplierValue" type="number" min="0" step="0.1" placeholder="e.g. 1.5 for 1.5X" />
+            </div>
+
+            <div class="field">
+              <label for="multiplierScope">Multiplier scope</label>
+              <select id="multiplierScope">
+                <option value="PER_ORDER">Per order</option>
+                <option value="PER_SKU">Per SKU line</option>
+                <option value="PER_UNIT">Per unit (advanced)</option>
+              </select>
+            </div>
+          </div>
+          <div class="edge-note">
+            Combination behavior for multiple matching multipliers is controlled via “Combination mode” above (stack vs override).
+          </div>
+        </div>
+
+        <!-- BONUS CONFIG -->
+        <div id="actionBonus" class="action-block" style="display:none;">
+          <h3>Bonus configuration</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="bonusType">Bonus type</label>
+              <select id="bonusType">
+                <option value="FIXED_POINTS">Fixed extra points</option>
+                <option value="PERCENT_BASE_POINTS">% of base points</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bonusValue">Bonus value</label>
+              <input id="bonusValue" type="number" min="0" placeholder="e.g. 500 or 20 (%)" />
+            </div>
+          </div>
+          <div class="edge-note">
+            Example: “Buy iPhone → +500 points” OR “Spend ≥₹10,000 → +20% of base points”.
+          </div>
+        </div>
+
+        <!-- CAP CONFIG -->
+        <div id="actionCap" class="action-block" style="display:none;">
+          <h3>Cap / Limit configuration</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="capScope">Cap scope</label>
+              <select id="capScope">
+                <option value="PER_TXN">Per transaction</option>
+                <option value="PER_SKU">Per SKU line item</option>
+                <option value="PER_CUSTOMER_MONTH">Per customer per month</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="capType">Cap type</label>
+              <select id="capType">
+                <option value="ABSOLUTE_POINTS">Absolute max points</option>
+                <option value="PERCENT_PRICE">% of selling price</option>
+                <option value="PERCENT_COST">% of cost price</option>
+                <option value="PERCENT_MARGIN">% of margin value</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="capValue">Cap value</label>
+              <input id="capValue" type="number" min="0" placeholder="e.g. 1000 or 5 or 40" />
+            </div>
+          </div>
+          <div class="edge-note">
+            Example: “Max 1000 points per SKU” or “Max 5% of selling price as points” or “Max 40% of margin as points”.
+          </div>
+        </div>
+      </div>
+
+      <!-- SKU-SPECIFIC OVERRIDES & EXCEL IMPORT FLAGS -->
+      <div class="card" id="skuExcelUploadCard">
+        <h2>4. SKU Earn Tables (Excel upload)</h2>
+        <div class="hint">
+          Upload Excel files that define earn values and caps <b>per SKU</b>. 
+          Conditions like tier, card variant, channel, etc. will still be configured in the rule UI above.
+        </div>
+
+        <div class="form-grid">
+          <div class="field" style="grid-column: 1 / -1;">
+            <label for="excelUpload">Upload SKU earn Excel</label>
+            <input id="excelUpload" type="file" accept=".xlsx,.xls,.csv" />
+            <div class="edge-note">
+              Expected columns (example): client_id, sku_id, sku_name, earn_type, earn_value, earn_basis, cap_type, cap_value, cap_basis, allow_multipliers, allow_bonuses, effective_from, effective_to.
+              This file does <b>not</b> contain tier/card/channel conditions.
+            </div>
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <label>Uploaded SKU earn tables</label>
+            <div class="edge-note">
+              In a real system this would list parsed & validated Excel files. 
+              Finance would select one of these when creating a base rule.
+            </div>
+            <ul style="font-size:12px; padding-left:18px; margin:4px 0 0 0;">
+              <li>HDFC_DEFAULT_SKU_TABLE (active)</li>
+              <li>HDFC_DIWALI_2025_SKU_TABLE (active · 20 Oct – 27 Oct)</li>
+              <li>ICICI_TRAVEL_SKU_TABLE (draft)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="skuExcelLogicCard">
+        <h2>5. SKU Overrides & Excel-driven logic</h2>
+        <div class="hint">
+          Use this section when base earn should come from a SKU earn table (Excel) instead of a formula.
+          This rule's <b>conditions</b> (tier, card, category, channel, etc.) decide <i>when</i> that table is used.
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="excelSource">Use SKU earn table (Excel)</label>
+            <select id="excelSource">
+              <option value="">Do not use Excel (use formula above)</option>
+              <option value="HDFC_DEFAULT_SKU_TABLE">HDFC_DEFAULT_SKU_TABLE</option>
+              <option value="HDFC_DIWALI_2025_SKU_TABLE">HDFC_DIWALI_2025_SKU_TABLE</option>
+              <option value="ICICI_TRAVEL_SKU_TABLE">ICICI_TRAVEL_SKU_TABLE</option>
+            </select>
+            <div class="edge-note">
+              When selected and this rule is a <b>BASE</b> rule, base points and caps will be looked up per SKU from the chosen table.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Precedence for SKU table</label>
+            <select id="skuPrecedence">
+              <option value="SKU_OVERRIDE">SKU override (strongest – ignore other base rules)</option>
+              <option value="SKU_FALLBACK">SKU fallback (only if no other base rule applies)</option>
+            </select>
+            <div class="edge-note">
+              Most bank catalogs use “SKU override” so that Excel-defined earn replaces generic category/program base rules.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Allow other multipliers on SKUs from this table?</label>
+            <div class="inline">
+              <input id="allowMultipliersOnSku" type="checkbox" checked />
+              <span class="muted">Uncheck to prevent tier/category/card multipliers for these SKUs.</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Allow bonuses on SKUs from this table?</label>
+            <div class="inline">
+              <input id="allowBonusesOnSku" type="checkbox" checked />
+              <span class="muted">Uncheck if SKU earn (from Excel) must be final except for caps.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="edge-note">
+          Engine behaviour:<br/>
+          • If a SKU earn table is selected and this is a BASE rule, base points are taken from Excel instead of formula.<br/>
+          • “SKU override” makes Excel-based base earn win over category/program base rules when conditions match.<br/>
+          • Caps defined inside the SKU table still combine with transaction-level or program-level caps (min of all).<br/>
+          • Excel does not define tier/card/channel – that is always controlled by the rule's conditions above.
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SUMMARY PANEL -->
+    <div class="card summary-card">
+      <div class="summary-title">Rule summary (human-readable)</div>
+      <div class="badge-row" id="badgeRow"></div>
+      <div id="summaryText" class="summary-text">
+        Start filling details on the left to see a plain-language summary of this rule.
+      </div>
+
+      <div class="section-divider"></div>
+      <div class="summary-title" style="font-size:13px;">Technical payload (for engineering)</div>
+      <div id="jsonPreview" class="json-preview">
+        {}
+      </div>
+
+      <div class="section-divider"></div>
+      <div class="edge-note">
+        Engine notes:<br/>
+        • For a given txn/SKU, engine picks the most specific & highest-precedence BASE rule (no stacking).<br/>
+        • Multipliers and bonuses follow combination mode (stack vs override / pick best).<br/>
+        • CAP rules always apply using the tightest limit (min of all).<br/>
+        • Earn triggers can be delayed (e.g., delivery, return window closed) based on client config.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function $(id) { return document.getElementById(id); }
+
+  const inputsToWatch = [
+    "ruleName","clientId","ruleType","status",
+    "precedence","combinationMode","effectiveFrom","effectiveTo","noExpiration","ruleDescription",
+    "tiers","segments","cardVariants","geos",
+    "channels","minAmount","maxAmount","mccCodes",
+    "paymentMethod","earnTrigger","returnWindowDays",
+    "categories","brands",
+    "minSellingPrice","maxSellingPrice","minCostPrice","maxCostPrice","minMarginPct","maxMarginPct",
+    "skuList",
+    "baseMethod","basePoints","baseAmountUnit","baseAmountBasis",
+    "multiplierValue","multiplierScope",
+    "bonusType","bonusValue",
+    "capScope","capType","capValue",
+    "allowMultipliersOnSku","allowBonusesOnSku","excelSource",
+    "skuPrecedence","useOrderDateForMatching","useTriggerDateForMatching"
+  ];
+
+  function configurePrecedenceOptions(ruleType) {
+    const sel = $("precedence");
+    sel.innerHTML = "";
+    const addOpt = (val, label, selected) => {
+      const o = document.createElement("option");
+      o.value = val;
+      o.textContent = label;
+      if (selected) o.selected = true;
+      sel.appendChild(o);
+    };
+
+    if (ruleType === "BASE") {
+      addOpt("SKU_OVERRIDE", "SKU override (strongest)", false);
+      addOpt("SKU_FALLBACK", "SKU fallback (only if no other base applies)", false);
+      addOpt("CATEGORY_TIER_RULE", "Standard category / tier rule", true);
+      addOpt("PROGRAM_DEFAULT", "Program default / fallback", false);
+      $("precedenceNote").textContent = "For BASE rules, engine always picks exactly one best base rule using precedence and specificity (no stacking).";
+    } else if (ruleType === "MULTIPLIER" || ruleType === "BONUS") {
+      addOpt("CAMPAIGN_OVERRIDE", "Campaign / limited-time override", false);
+      addOpt("CATEGORY_TIER_RULE", "Standard category / tier rule", true);
+      addOpt("PROGRAM_DEFAULT", "Program default / fallback", false);
+      $("precedenceNote").textContent = "Controls which rule wins when multiple multipliers/bonuses of same type match.";
+    } else if (ruleType === "CAP") {
+      addOpt("PROGRAM_DEFAULT", "Program default (only option)", true);
+      $("precedenceNote").textContent = "CAP rules are always program-level; engine applies the tightest limit among all matching caps.";
+    }
+  }
+
+  function configureCombinationOptions(ruleType) {
+    const field = $("combinationField");
+    const sel = $("combinationMode");
+    sel.innerHTML = "";
+    if (ruleType === "MULTIPLIER") {
+      field.style.display = "block";
+      const opt1 = document.createElement("option");
+      opt1.value = "STACK";
+      opt1.textContent = "Stack with other multipliers (multiply all)";
+      sel.appendChild(opt1);
+      const opt2 = document.createElement("option");
+      opt2.value = "OVERRIDE";
+      opt2.textContent = "Override other multipliers (only this applies)";
+      sel.appendChild(opt2);
+      $("combinationNote").textContent = "For MULTIPLIER rules, choose whether this stacks with other multipliers or overrides them when it matches.";
+    } else if (ruleType === "BONUS") {
+      field.style.display = "block";
+      const opt1 = document.createElement("option");
+      opt1.value = "STACK";
+      opt1.textContent = "Stack with other bonuses (sum all)";
+      sel.appendChild(opt1);
+      const opt2 = document.createElement("option");
+      opt2.value = "PICK_BEST";
+      opt2.textContent = "Exclusive (pick highest bonus only)";
+      sel.appendChild(opt2);
+      $("combinationNote").textContent = "For BONUS rules, choose whether multiple bonuses add up or only the best one is applied.";
+    } else {
+      field.style.display = "none";
+    }
+  }
+
+  function updateVisibility() {
+    const ruleType = $("ruleType").value;
+
+    // Action blocks
+    $("actionBase").style.display = ruleType === "BASE" ? "block" : "none";
+    $("actionMultiplier").style.display = ruleType === "MULTIPLIER" ? "block" : "none";
+    $("actionBonus").style.display = ruleType === "BONUS" ? "block" : "none";
+    $("actionCap").style.display = ruleType === "CAP" ? "block" : "none";
+
+    // SKU/Excel cards only for BASE
+    const showSku = ruleType === "BASE";
+    $("skuExcelUploadCard").style.display = showSku ? "block" : "none";
+    $("skuExcelLogicCard").style.display = showSku ? "block" : "none";
+
+    // Base amount unit field
+    const method = $("baseMethod").value;
+    $("baseAmountUnitField").style.display = method === "PER_AMOUNT" ? "block" : "none";
+
+    // Excel selection hides base formula
+    const excelSelected = $("excelSource").value !== "";
+    $("baseFormulaBlock").style.display = (ruleType === "BASE" && !excelSelected) ? "block" : "none";
+
+    // No expiration
+    const noExp = $("noExpiration").checked;
+    $("effectiveTo").disabled = noExp;
+    $("effectiveTo").style.opacity = noExp ? 0.5 : 1;
+
+    // Return window days visibility
+    const earnTrigger = $("earnTrigger").value;
+    $("returnWindowField").style.display = earnTrigger === "RETURN_WINDOW_CLOSED" ? "block" : "none";
+
+    // Precedence & combination
+    configurePrecedenceOptions(ruleType);
+    configureCombinationOptions(ruleType);
+  }
+
+  function getState() {
+    const state = {};
+    inputsToWatch.forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      if (el.type === "checkbox") {
+        state[id] = el.checked;
+      } else if (el.type === "radio") {
+        if (el.checked) {
+          state[id] = el.value;
+        }
+      } else {
+        state[id] = el.value;
+      }
+    });
+    // Derive dateMatchingMode
+    state.dateMatchingMode = $("useTriggerDateForMatching").checked ? "TRIGGER_DATE" : "ORDER_DATE";
+    return state;
+  }
+
+  function buildHumanSummary(state) {
+    if (!state.ruleName && !state.ruleType) {
+      return "Start filling details on the left to see a plain-language summary of this rule.";
+    }
+
+    let lines = [];
+
+    const rType = state.ruleType || "BASE";
+    const typeLabel = {
+      BASE: "Base earn rule",
+      MULTIPLIER: "Multiplier rule",
+      BONUS: "Bonus rule",
+      CAP: "Cap / limit rule"
+    }[rType] || "Earn rule";
+
+    lines.push(`${typeLabel} for ${state.clientId || "selected clients"}.`);
+    if (state.ruleName) lines.push(`Name: “${state.ruleName}”.`);
+
+    // Effective dates
+    if (state.noExpiration) {
+      lines.push("Effective: from " + (state.effectiveFrom || "rule activation") + " with no end date (evergreen).");
+    } else if (state.effectiveFrom || state.effectiveTo) {
+      lines.push(`Effective between ${state.effectiveFrom || "start"} and ${state.effectiveTo || "no end date"}.`);
+    }
+
+    // Conditions
+    let condParts = [];
+    if (state.tiers) condParts.push(`customer tiers: ${state.tiers}`);
+    if (state.segments) condParts.push(`segments: ${state.segments}`);
+    if (state.cardVariants) condParts.push(`card variants: ${state.cardVariants}`);
+    if (state.geos) condParts.push(`geographies: ${state.geos}`);
+    if (state.channels) condParts.push(`channels: ${state.channels}`);
+    if (state.minAmount) condParts.push(`min transaction amount: ${state.minAmount}`);
+    if (state.maxAmount) condParts.push(`max transaction amount: ${state.maxAmount}`);
+    if (state.mccCodes) condParts.push(`MCC codes: ${state.mccCodes}`);
+    if (state.categories) condParts.push(`categories: ${state.categories}`);
+    if (state.brands) condParts.push(`brands: ${state.brands}`);
+    if (state.minSellingPrice) condParts.push(`min selling price: ${state.minSellingPrice}`);
+    if (state.maxSellingPrice) condParts.push(`max selling price: ${state.maxSellingPrice}`);
+    if (state.minCostPrice) condParts.push(`min cost price: ${state.minCostPrice}`);
+    if (state.maxCostPrice) condParts.push(`max cost price: ${state.maxCostPrice}`);
+    if (state.minMarginPct) condParts.push(`min margin %: ${state.minMarginPct}`);
+    if (state.maxMarginPct) condParts.push(`max margin %: ${state.maxMarginPct}`);
+    if (state.skuList) condParts.push(`specific SKUs defined`);
+
+    if (state.paymentMethod) {
+      const pmLabel = {
+        CARD_ONLY: "Card only",
+        POINTS_ONLY: "Points only",
+        CARD_PLUS_POINTS: "Card + Points",
+        WALLET: "Wallet",
+        UPI: "UPI",
+        NETBANKING: "Netbanking"
+      }[state.paymentMethod] || state.paymentMethod;
+      condParts.push(`payment method: ${pmLabel}`);
+    }
+
+    if (state.earnTrigger) {
+      const trigLabel = {
+        PAYMENT_SUCCESS: "Payment success",
+        ORDER_CONFIRMED: "Order confirmed",
+        ORDER_DELIVERED: "Order delivered",
+        RETURN_WINDOW_CLOSED: "Return window closed",
+        SETTLEMENT_COMPLETED: "Settlement completed"
+      }[state.earnTrigger] || state.earnTrigger;
+      let t = `earn triggered at: ${trigLabel}`;
+      if (state.earnTrigger === "RETURN_WINDOW_CLOSED" && state.returnWindowDays) {
+        t += ` (+${state.returnWindowDays} days)`;
+      }
+      condParts.push(t);
+    }
+
+    if (state.dateMatchingMode === "TRIGGER_DATE") {
+      condParts.push("rule date matching uses trigger event date (not order date)");
+    }
+
+    if (condParts.length > 0) {
+      lines.push("");
+      lines.push("🔍 Applies when:");
+      condParts.forEach(p => lines.push("• " + p));
+    }
+
+    // Action description by type
+    lines.push("");
+    lines.push("⚙️ Action:");
+
+    if (rType === "BASE") {
+      const excelUsed = state.excelSource;
+      if (excelUsed) {
+        lines.push(`• Base earn comes from SKU Excel table: ${excelUsed}.`);
+        lines.push(`• Excel precedence: ${state.skuPrecedence || "SKU_OVERRIDE"}.`);
+      } else {
+        const method = state.baseMethod || "PER_AMOUNT";
+        const basisLabel = {
+          ELIGIBLE_SPEND: "eligible spend",
+          SELLING_PRICE: "selling price",
+          COST_PRICE: "cost price",
+          MARGIN_VALUE: "margin value"
+        }[state.baseAmountBasis || "ELIGIBLE_SPEND"];
+
+        if (method === "PER_AMOUNT") {
+          lines.push(`• Earn ${state.basePoints || 0} point(s) per ${state.baseAmountUnit || 1} currency units of ${basisLabel}.`);
+        } else if (method === "FIXED_PER_TXN") {
+          lines.push(`• Earn fixed ${state.basePoints || 0} point(s) per qualifying transaction.`);
+        } else if (method === "FIXED_PER_SKU") {
+          lines.push(`• Earn fixed ${state.basePoints || 0} point(s) per unit of each qualifying SKU.`);
+        }
+      }
+    }
+
+    if (rType === "MULTIPLIER") {
+      lines.push(`• Multiply base points by ${state.multiplierValue || 1}X.`);
+      const scopeLabel = {
+        PER_ORDER: "per order",
+        PER_SKU: "per SKU line",
+        PER_UNIT: "per unit"
+      }[state.multiplierScope || "PER_ORDER"];
+      lines.push(`• Multiplier scope: ${scopeLabel}.`);
+    }
+
+    if (rType === "BONUS") {
+      if (state.bonusType === "PERCENT_BASE_POINTS") {
+        lines.push(`• Add bonus equal to ${state.bonusValue || 0}% of base points.`);
+      } else {
+        lines.push(`• Add fixed bonus of ${state.bonusValue || 0} point(s).`);
+      }
+    }
+
+    if (rType === "CAP") {
+      let scopeLabel = {
+        PER_TXN: "per transaction",
+        PER_SKU: "per SKU line",
+        PER_CUSTOMER_MONTH: "per customer per month"
+      }[state.capScope] || "per transaction";
+
+      let capDesc = "";
+      switch (state.capType) {
+        case "ABSOLUTE_POINTS":
+          capDesc = `Max ${state.capValue || 0} point(s) ${scopeLabel}.`;
+          break;
+        case "PERCENT_PRICE":
+          capDesc = `Max ${state.capValue || 0}% of selling price as points ${scopeLabel}.`;
+          break;
+        case "PERCENT_COST":
+          capDesc = `Max ${state.capValue || 0}% of cost price as points ${scopeLabel}.`;
+          break;
+        case "PERCENT_MARGIN":
+          capDesc = `Max ${state.capValue || 0}% of margin value as points ${scopeLabel}.`;
+          break;
+      }
+      lines.push("• " + capDesc);
+    }
+
+    // Combination & precedence
+    lines.push("");
+    lines.push("🔗 Priority & combination:");
+
+    lines.push(`• Precedence: ${state.precedence || "CATEGORY_TIER_RULE"}.`);
+
+    if (rType === "MULTIPLIER" || rType === "BONUS") {
+      const cm = state.combinationMode || "STACK";
+      if (rType === "MULTIPLIER") {
+        if (cm === "STACK") {
+          lines.push("• Combination: stacks with other multipliers (all multipliers multiply together, subject to max multiplier caps).");
+        } else if (cm === "OVERRIDE") {
+          lines.push("• Combination: override – when this multiplier applies, lower-priority multipliers are ignored.");
+        }
+      } else if (rType === "BONUS") {
+        if (cm === "STACK") {
+          lines.push("• Combination: stacks with other bonuses (all bonus points add up).");
+        } else if (cm === "PICK_BEST") {
+          lines.push("• Combination: exclusive – when multiple bonuses match, the highest bonus only is applied.");
+        }
+      }
+    } else {
+      lines.push("• BASE and CAP rules do not stack with same-type rules; engine picks a single best BASE and applies the tightest CAP limit.");
+    }
+
+    // SKU & Excel specifics
+    if (state.skuList || state.excelSource) {
+      lines.push("");
+      lines.push("📦 SKU / Excel behavior:");
+      if (state.skuList) {
+        lines.push("• This rule is SKU-targeted. SKU-level rules usually override generic category/client rules based on precedence.");
+      }
+      if (state.excelSource) {
+        lines.push(`• Earn logic for these SKUs is coming from Excel source: ${state.excelSource}.`);
+        lines.push(`• Allow other multipliers on these SKUs: ${state.allowMultipliersOnSku ? "Yes" : "No"}.`);
+        lines.push(`• Allow bonuses on these SKUs: ${state.allowBonusesOnSku ? "Yes" : "No"}.`);
+      }
+    }
+
+    if (state.ruleDescription) {
+      lines.push("");
+      lines.push("📝 Notes: " + state.ruleDescription);
+    }
+
+    return lines.join("\n");
+  }
+
+  function buildBadges(state) {
+    const container = $("badgeRow");
+    container.innerHTML = "";
+
+    if (state.ruleType) {
+      const span = document.createElement("span");
+      span.className = "pill";
+      span.textContent = state.ruleType;
+      container.appendChild(span);
+    }
+
+    if (state.status) {
+      const span = document.createElement("span");
+      span.className = "pill " + (state.status === "ACTIVE" ? "pill-success" : state.status === "PAUSED" ? "pill-warning" : "");
+      span.textContent = state.status;
+      container.appendChild(span);
+    }
+
+    if (state.clientId) {
+      const span = document.createElement("span");
+      span.className = "pill";
+      span.textContent = state.clientId;
+      container.appendChild(span);
+    }
+
+    if (state.ruleType === "MULTIPLIER" || state.ruleType === "BONUS") {
+      if (state.combinationMode === "OVERRIDE" || state.combinationMode === "PICK_BEST") {
+        const span = document.createElement("span");
+        span.className = "pill pill-danger";
+        span.textContent = "Exclusive / override behavior";
+        container.appendChild(span);
+      }
+    }
+
+    if (state.noExpiration) {
+      const span = document.createElement("span");
+      span.className = "pill";
+      span.textContent = "Evergreen";
+      container.appendChild(span);
+    }
+  }
+
+  function updateUI() {
+    updateVisibility();
+    const state = getState();
+    $("summaryText").textContent = buildHumanSummary(state);
+    buildBadges(state);
+    $("jsonPreview").textContent = JSON.stringify(state, null, 2);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Initialize precedence & combination based on default ruleType
+    configurePrecedenceOptions($("ruleType").value);
+    configureCombinationOptions($("ruleType").value);
+
+    inputsToWatch.forEach(id => {
+      const el = $(id);
+      if (!el) return;
+      el.addEventListener("input", updateUI);
+      el.addEventListener("change", updateUI);
+    });
+
+    $("ruleType").addEventListener("change", updateUI);
+    $("baseMethod").addEventListener("change", updateUI);
+    $("excelSource").addEventListener("change", updateUI);
+    $("noExpiration").addEventListener("change", updateUI);
+    $("earnTrigger").addEventListener("change", updateUI);
+
+    updateUI();
+  });
+</script>
+</body>
+</html>
