@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Client Earn Settings</title>
+  <style>
+    :root {
+      font-family: system-ui, sans-serif;
+      color: #111827;
+      background: #f3f4f6;
+    }
+    body { margin: 0; padding: 24px; }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 24px 30px;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    h1 { margin: 0 0 8px 0; }
+    .sub { color: #6b7280; font-size: 13px; margin-bottom: 16px; }
+    .field { margin-bottom: 18px; display: flex; flex-direction: column; }
+    label { font-weight: 600; margin-bottom: 4px; }
+    input, select {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      background: #f9fafb;
+    }
+    input:focus, select:focus {
+      border-color: #2563eb;
+      outline: none;
+      background: #ffffff;
+    }
+    .hint { font-size: 12px; color: #6b7280; margin-top: 3px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px 20px;
+    }
+    .section-title { margin-top: 24px; margin-bottom: 6px; font-size: 15px; font-weight: 600; }
+    .save-btn {
+      background: #2563eb;
+      color: #fff;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .save-btn:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Client Earn Settings</h1>
+  <div class="sub">
+    Configure earn settings <b>once per client</b>. All Base/Cap rules for this client will use these values.
+  </div>
+
+  <div class="field">
+    <label for="clientId">Client / Program</label>
+    <select id="clientId">
+      <option value="">Select…</option>
+      <option value="BANK_HDFC">Bank – HDFC</option>
+      <option value="BANK_ICICI">Bank – ICICI</option>
+      <option value="RETAIL_X">Retail – X</option>
+    </select>
+    <div class="hint">Load and save settings per client.</div>
+  </div>
+
+  <div class="section-title">Commercial settings</div>
+  <div class="grid">
+    <div class="field">
+      <label for="pointValue">Point value (₹ per point)</label>
+      <input id="pointValue" type="number" step="0.01" min="0.01" placeholder="e.g. 0.25" />
+      <div class="hint">E.g. 1 point = ₹0.25 → 100 points = ₹25.</div>
+    </div>
+
+    <div class="field">
+      <label for="defaultDiscountPct">Default discount % (MVP)</label>
+      <input id="defaultDiscountPct" type="number" step="0.1" min="0" max="100" placeholder="e.g. 5" />
+      <div class="hint">
+        Used only for earn calculations in MVP when per-txn discount is unknown.
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="pgRatePct">PG charges % on final price</label>
+      <input id="pgRatePct" type="number" step="0.1" min="0" max="100" placeholder="e.g. 2" />
+      <div class="hint">PG cost = PG% × FinalPrice_incl. Included in total cost before margin.</div>
+    </div>
+  </div>
+
+  <div class="section-title">Rounding & event logic</div>
+  <div class="grid">
+    <div class="field">
+      <label for="defaultRoundingMode">Default rounding mode</label>
+      <select id="defaultRoundingMode">
+        <option value="">Not set</option>
+        <option value="FLOOR">Round down</option>
+        <option value="CEIL">Round up</option>
+        <option value="NEAREST_1">Nearest 1 point</option>
+        <option value="NEAREST_50">Nearest 50 points</option>
+        <option value="NEAREST_100">Nearest 100 points</option>
+      </select>
+      <div class="hint">Base rules can choose “Use client default” to use this.</div>
+    </div>
+
+    <div class="field">
+      <label for="earnTriggerEvent">Earn trigger event</label>
+      <select id="earnTriggerEvent">
+        <option value="PAYMENT_SUCCESS">On Payment Success</option>
+        <option value="ORDER_DELIVERED">On Order Delivered</option>
+        <option value="RETURN_WINDOW_CLOSED">After Return Window Closes</option>
+      </select>
+      <div class="hint">When do we credit points for this client?</div>
+    </div>
+
+    <div class="field" id="returnWindowField" style="display:none;">
+      <label for="returnWindowDays">Return window (days)</label>
+      <input id="returnWindowDays" type="number" min="0" placeholder="e.g. 7" />
+      <div class="hint">Required if trigger = After Return Window Closes.</div>
+    </div>
+
+    <div class="field">
+      <label for="ruleDateMatch">Rule date matching</label>
+      <select id="ruleDateMatch">
+        <option value="ORDER_DATE">Use Order Date</option>
+        <option value="TRIGGER_EVENT_DATE">Use Trigger Event Date</option>
+      </select>
+      <div class="hint">
+        Controls which date is used to check rule validity (effective from/to).
+      </div>
+    </div>
+  </div>
+
+  <button class="save-btn">Save client settings</button>
+</div>
+
+<script>
+  const earnTrigger = document.getElementById("earnTriggerEvent");
+  const returnField = document.getElementById("returnWindowField");
+
+  earnTrigger.addEventListener("change", () => {
+    if (earnTrigger.value === "RETURN_WINDOW_CLOSED") {
+      returnField.style.display = "block";
+    } else {
+      returnField.style.display = "none";
+    }
+  });
+</script>
+</body>
+</html>
