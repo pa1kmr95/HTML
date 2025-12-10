@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Earn Rule Builder – MVP (Base + Cap)</title>
+  <title>Earn Rule Builder – MVP (Base + Cap, value engine)</title>
   <style>
     :root {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -40,7 +40,12 @@
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 12px 16px;
     }
-    .field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+    }
     label { font-weight: 500; }
     input[type="text"], input[type="number"], input[type="date"], select, textarea {
       border-radius: 8px;
@@ -94,7 +99,7 @@
     .edge-note { font-size: 11px; color: #9ca3af; margin-top: 4px; }
     .slab-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0,1fr));
       gap: 8px 12px;
       font-size: 12px;
       margin-top: 4px;
@@ -112,6 +117,33 @@
       border: 1px dashed #e5e7eb;
       margin-bottom: 10px;
     }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px 16px;
+    }
+    .preview-output {
+      margin-top: 8px;
+      padding: 8px;
+      background: #0f172a;
+      color: #e5e7eb;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      font-size: 11px;
+      white-space: pre-line;
+    }
+    .btn-preview {
+      margin-top: 6px;
+      align-self: flex-start;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #2563eb;
+      background: #2563eb;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-preview:hover { background: #1d4ed8; }
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
       .summary-card { position: static; }
@@ -123,14 +155,15 @@
   <header>
     <h1>Earn Rule Builder – MVP</h1>
     <div class="subtitle">
-      Base & Cap rules only. Client-level earn settings (point value, discount%, PG%, rounding, events) are managed separately.
+      Base & Cap rules. Rule engine <b>only calculates earn value in ₹</b>.  
+      Conversion to points happens via card-variant mapping configured in Client Settings.
     </div>
   </header>
 
   <div class="layout">
-    <!-- LEFT: RULE BUILDER -->
+    <!-- LEFT: RULE BUILDER + PREVIEW -->
     <div>
-      <!-- CLIENT & CLIENT SUMMARY (READ-ONLY) -->
+      <!-- 0. CLIENT & SUMMARY -->
       <div class="card">
         <h2>0. Client</h2>
         <div class="form-grid">
@@ -143,23 +176,24 @@
               <option value="RETAIL_X">Retail – X</option>
             </select>
             <div class="edge-note">
-              Client-level settings (point value, discount%, PG%, rounding, event) come from the Client Settings screen.
+              This rule belongs to the selected client.  
+              Earn engine will use this client’s discount%, PG% and date/trigger settings.
             </div>
           </div>
         </div>
 
         <div class="client-summary" id="clientSummary">
-          <!-- In real app, fill these from backend using selected clientId -->
-          <div><b>Client settings (read-only):</b></div>
-          <div>• Point value: <span id="csPointValue">–</span></div>
-          <div>• Default discount% for earn: <span id="csDiscount">–</span></div>
-          <div>• PG% on final price: <span id="csPg">–</span></div>
-          <div>• Default rounding: <span id="csRounding">–</span></div>
-          <div>• Trigger event: <span id="csTrigger">–</span></div>
-          <div>• Rule date match: <span id="csDateMatch">–</span></div>
+          <!-- In real app, this is filled from backend for selected client -->
+          <div><b>Client earn settings (read-only summary):</b></div>
+          <div>• Default discount% for earn: <span id="csDiscount">configured in Client Settings</span></div>
+          <div>• PG% on final price: <span id="csPg">configured in Client Settings</span></div>
+          <div>• Default rounding for points: <span id="csRounding">configured in Client Settings</span></div>
+          <div>• Trigger event: <span id="csTrigger">configured in Client Settings</span></div>
+          <div>• Rule date match: <span id="csDateMatch">configured in Client Settings</span></div>
+          <div>• Card → point value mapping: <span>managed in Client Settings (per card variant)</span></div>
         </div>
         <div class="edge-note">
-          This section is just a summary. To change these values, go to the “Client Settings” screen.
+          To edit discount%, PG%, rounding or card mappings, go to the “Client Earn Settings” screen.
         </div>
       </div>
 
@@ -170,14 +204,14 @@
         <div class="form-grid">
           <div class="field">
             <label for="ruleName">Rule name</label>
-            <input id="ruleName" type="text" placeholder="e.g. HDFC base earn on >10% margin" />
+            <input id="ruleName" type="text" placeholder="e.g. HDFC base earn on >10% net margin" />
           </div>
 
           <div class="field">
             <label for="ruleType">Rule type</label>
             <select id="ruleType">
-              <option value="BASE" selected>Base earn</option>
-              <option value="CAP">Cap / Limit</option>
+              <option value="BASE" selected>Base earn (value)</option>
+              <option value="CAP">Cap / Limit (on value)</option>
             </select>
           </div>
 
@@ -198,7 +232,8 @@
               <option value="PROGRAM_DEFAULT">Program default / fallback</option>
             </select>
             <div class="edge-note">
-              For BASE rules, engine picks exactly one base rule (no stacking). CAP rules always stack as tightest limit.
+              For BASE rules, engine picks exactly one rule (no stacking).  
+              CAP rules always stack as the tightest limit on earn value.
             </div>
           </div>
 
@@ -223,7 +258,7 @@
 
         <div class="field" style="margin-top:10px;">
           <label for="ruleDescription">Internal description</label>
-          <textarea id="ruleDescription" placeholder="Explain why this rule exists in plain language (for Finance, Biz, QA)."></textarea>
+          <textarea id="ruleDescription" placeholder="Explain this rule for Finance, Biz, QA (e.g. target margin range, promo objective)."></textarea>
         </div>
       </div>
 
@@ -231,7 +266,7 @@
       <div class="card">
         <h2>2. Conditions – Who / What</h2>
         <div class="hint">
-          Define when this rule should apply. Net margin is computed using <b>client settings</b> (default discount%, PG%).
+          Define when this rule should apply. Net margin is computed using client’s discount% and PG% (excl. GST).
         </div>
 
         <h3>Customer & Card</h3>
@@ -248,7 +283,7 @@
 
           <div class="field">
             <label for="cardVariants">Bank card variant(s)</label>
-            <input id="cardVariants" type="text" class="tag-input" placeholder="e.g. Infinia, Regalia, Signature" />
+            <input id="cardVariants" type="text" class="tag-input" placeholder="e.g. Infinia, Regalia, Millenia" />
           </div>
         </div>
 
@@ -256,19 +291,19 @@
         <div class="form-grid">
           <div class="field">
             <label for="categories">Product categories</label>
-            <input id="categories" type="text" class="tag-input" placeholder="e.g. Electronics, Travel" />
+            <input id="categories" type="text" class="tag-input" placeholder="e.g. Mobiles, TV, Travel" />
           </div>
 
           <div class="field">
             <label for="brands">Brand(s)</label>
-            <input id="brands" type="text" class="tag-input" placeholder="e.g. Apple, Samsung" />
+            <input id="brands" type="text" class="tag-input" placeholder="e.g. Apple, Samsung, Sony" />
           </div>
 
           <div class="field">
             <label for="skuList">Specific SKU IDs (optional)</label>
             <textarea id="skuList" placeholder="One SKU ID per line, or comma-separated."></textarea>
             <div class="edge-note">
-              If filled, this rule targets specific SKUs and will usually override generic rules (depending on precedence).
+              If filled, this rule is SKU-specific and will usually override generic rules (via precedence).
             </div>
           </div>
 
@@ -311,10 +346,12 @@
           </div>
         </div>
         <div class="edge-note">
-          Engine computes net margin (excl. GST) using client settings:<br/>
-          • FinalPrice_incl = SellingPrice_incl − (clientDefaultDiscount% × SellingPrice_incl)<br/>
+          Engine computes net margin (excl. GST) as:<br/>
+          • FinalPrice_incl = SP_incl − (clientDefaultDiscount% × SP_incl / 100)<br/>
           • FinalPrice_excl = FinalPrice_incl ÷ (1 + GST%)<br/>
-          • TotalCost_excl = (CostPrice_incl ÷ (1 + GST%)) + (clientPgRate% × FinalPrice_incl)<br/>
+          • Cost_excl = CP_incl ÷ (1 + GST%)<br/>
+          • PG_cost = clientPgRate% × FinalPrice_incl<br/>
+          • TotalCost_excl = Cost_excl + PG_cost<br/>
           • NetMarginValue_excl = FinalPrice_excl − TotalCost_excl<br/>
           • NetMarginPct_excl = NetMarginValue_excl ÷ FinalPrice_excl
         </div>
@@ -324,12 +361,13 @@
       <div class="card">
         <h2>3. Action – What does this rule do?</h2>
         <div class="hint">
-          MVP supports only Base earn (margin-based slabs) and Cap rules.
+          MVP supports only Base earn (margin-based slabs) and Cap rules.  
+          Base rules decide how much <b>earn value in ₹</b> to give; caps bound that value.
         </div>
 
         <!-- BASE RULE CONFIG -->
         <div id="actionBase">
-          <h3>Base earn – margin-based slabs</h3>
+          <h3>Base earn – margin-based slabs (value)</h3>
 
           <div class="field">
             <label for="slabBasis">Slab basis</label>
@@ -339,16 +377,16 @@
             </select>
             <div class="edge-note">
               Basis decides which metric is used to choose the slab.  
-              Earn value is always calculated as % of net margin value (₹).
+              The reward itself is always expressed as <b>% of net margin value in ₹</b>.
             </div>
           </div>
 
           <div class="field">
-            <label>Margin slabs & % of net margin to reward</label>
+            <label>Margin slabs & % of net margin to reward (as earn value)</label>
             <div class="slab-grid slab-grid-header">
               <div>From</div>
               <div>To</div>
-              <div>% of net margin as earn value</div>
+              <div>% of net margin value as earn value (₹)</div>
             </div>
             <div class="slab-grid">
               <input id="slab1From" type="number" placeholder="e.g. 0" />
@@ -366,17 +404,16 @@
               <input id="slab3Share" type="number" placeholder="e.g. 30" />
             </div>
             <div class="edge-note">
-              Engine will:<br/>
-              • Compute net margin (value & %) excl. GST using client settings.<br/>
-              • Find the matching slab (value or %).<br/>
-              • EarnValue(₹) = NetMarginValue_excl × (slab% / 100).<br/>
-              • Points = EarnValue(₹) ÷ clientPointValue.<br/>
-              • Apply rounding (rule-level or client default).
+              Engine:<br/>
+              • Computes net margin (value/%).<br/>
+              • Picks slab based on basis and ranges.<br/>
+              • EarnValue_in_₹ = NetMarginValue_excl × (slab% / 100).<br/>
+              • Conversion to points is done later using card-variant mapping.
             </div>
           </div>
 
           <div class="field">
-            <label for="roundingMode">Rounding mode for this rule</label>
+            <label for="roundingMode">Rounding mode (for points later)</label>
             <select id="roundingMode">
               <option value="CLIENT_DEFAULT">Use client default rounding</option>
               <option value="FLOOR">Round down</option>
@@ -386,15 +423,15 @@
               <option value="NEAREST_100">Round to nearest 100 points</option>
             </select>
             <div class="edge-note">
-              Applied to this rule's calculated points.  
-              “Use client default” falls back to the client's rounding mode from Client Settings.
+              This does <b>not</b> affect earn value in ₹, only how points are rounded later:  
+              rule rounding → card rounding override → client default rounding.
             </div>
           </div>
         </div>
 
         <!-- CAP CONFIG -->
         <div id="actionCap" style="display:none;">
-          <h3>Cap / Limit configuration</h3>
+          <h3>Cap / Limit configuration (on earn value)</h3>
           <div class="form-grid">
             <div class="field">
               <label for="capScope">Cap scope</label>
@@ -406,23 +443,117 @@
             </div>
 
             <div class="field">
-              <label for="capType">Cap type</label>
+              <label for="capType">Cap type (all in ₹ terms)</label>
               <select id="capType">
-                <option value="ABSOLUTE_POINTS">Absolute max points</option>
-                <option value="PCT_FINAL_PRICE_INCL">Max % of final price (incl. GST)</option>
-                <option value="PCT_FINAL_PRICE_EXCL">Max % of final price (excl. GST)</option>
-                <option value="PCT_MARGIN_VALUE">Max % of net margin value</option>
+                <option value="ABSOLUTE_VALUE">Absolute max earn value (₹)</option>
+                <option value="PCT_FINAL_PRICE_INCL">Max % of final price (incl. GST) as earn value</option>
+                <option value="PCT_FINAL_PRICE_EXCL">Max % of final price (excl. GST) as earn value</option>
+                <option value="PCT_MARGIN_VALUE">Max % of net margin value as earn value</option>
               </select>
             </div>
 
             <div class="field">
               <label for="capValue">Cap value</label>
-              <input id="capValue" type="number" min="0" placeholder="e.g. 1000 or 5 or 40" />
+              <input id="capValue" type="number" min="0" placeholder="e.g. 5000 or 5 or 40" />
             </div>
           </div>
           <div class="edge-note">
-            Multiple CAP rules can match; engine applies the tightest limit on points.
+            Examples:<br/>
+            • Max earn value = ₹5,000 per transaction (ABSOLUTE_VALUE).<br/>
+            • Max earn value = 5% of final price excl./incl. GST.<br/>
+            • Max earn value = 40% of net margin value.<br/>
+            Engine applies all matching CAP rules and uses the tightest cap on <b>earn value in ₹</b>.  
+            Points are then computed from this capped value using card mappings.
           </div>
+        </div>
+      </div>
+
+      <!-- 4. SAMPLE CALCULATOR (PREVIEW) -->
+      <div class="card">
+        <h2>4. Sample calculator (preview for this rule)</h2>
+        <div class="hint">
+          Enter a sample product and card variants to see approximate earn value (₹) and points.  
+          In production, this logic should be backed by the same engine + client cap rules.
+        </div>
+
+        <h3>4.1 Sample product & client economics</h3>
+        <div class="preview-grid">
+          <div class="field">
+            <label for="pSpIncl">Selling price (incl. GST)</label>
+            <input id="pSpIncl" type="number" min="0" placeholder="e.g. 50000" />
+          </div>
+          <div class="field">
+            <label for="pCpIncl">Cost price (incl. GST)</label>
+            <input id="pCpIncl" type="number" min="0" placeholder="e.g. 40000" />
+          </div>
+          <div class="field">
+            <label for="pGstPct">GST %</label>
+            <input id="pGstPct" type="number" min="0" max="100" placeholder="e.g. 18" />
+          </div>
+          <div class="field">
+            <label for="pClientDiscountPct">Client default discount % (for preview)</label>
+            <input id="pClientDiscountPct" type="number" min="0" max="100" placeholder="e.g. 5" />
+            <div class="edge-note">
+              In real system, this comes from Client Settings (defaultDiscount%).
+            </div>
+          </div>
+          <div class="field">
+            <label for="pPgRatePct">PG charges % (for preview)</label>
+            <input id="pPgRatePct" type="number" min="0" max="100" placeholder="e.g. 2" />
+            <div class="edge-note">
+              In real system, this comes from Client Settings (pgRate%).
+            </div>
+          </div>
+        </div>
+
+        <h3>4.2 Optional cap for preview</h3>
+        <div class="preview-grid">
+          <div class="field">
+            <label for="pCapType">Assumed cap type (preview)</label>
+            <select id="pCapType">
+              <option value="">No cap in preview</option>
+              <option value="ABSOLUTE_VALUE">Absolute max earn value (₹)</option>
+              <option value="PCT_FINAL_PRICE_INCL">Max % of final price (incl. GST)</option>
+              <option value="PCT_FINAL_PRICE_EXCL">Max % of final price (excl. GST)</option>
+              <option value="PCT_MARGIN_VALUE">Max % of net margin value</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="pCapValue">Cap value (preview)</label>
+            <input id="pCapValue" type="number" min="0" placeholder="e.g. 5000 or 5 or 40" />
+          </div>
+        </div>
+        <div class="edge-note">
+          In production, preview should call backend and use all active CAP rules for the client.  
+          Here, this is a simple approximation to help Finance sanity-check values while designing the rule.
+        </div>
+
+        <h3>4.3 Card variants (point mapping) for preview</h3>
+        <div class="preview-grid">
+          <div class="field">
+            <label for="pCard1Name">Card 1 name</label>
+            <input id="pCard1Name" type="text" placeholder="e.g. Infinia" />
+          </div>
+          <div class="field">
+            <label for="pCard1PointValue">Card 1 point value (₹ per point)</label>
+            <input id="pCard1PointValue" type="number" min="0.01" step="0.01" placeholder="e.g. 0.50" />
+          </div>
+          <div class="field">
+            <label for="pCard2Name">Card 2 name</label>
+            <input id="pCard2Name" type="text" placeholder="e.g. Regalia" />
+          </div>
+          <div class="field">
+            <label for="pCard2PointValue">Card 2 point value (₹ per point)</label>
+            <input id="pCard2PointValue" type="number" min="0.01" step="0.01" placeholder="e.g. 0.75" />
+          </div>
+        </div>
+
+        <button type="button" class="btn-preview" onclick="runPreview()">
+          Run sample calculation
+        </button>
+
+        <div id="previewOutput" class="preview-output" style="margin-top:8px;">
+          Fill sample values above and click “Run sample calculation” to see net margin, earn value and points per card.
         </div>
       </div>
     </div>
@@ -444,9 +575,10 @@
       <div class="section-divider"></div>
       <div class="edge-note">
         Engine MVP notes:<br/>
-        • Client settings (point value, discount%, PG%, rounding, trigger, date match) live in a separate config table.<br/>
-        • Rule JSON only defines conditions + margins slabs/caps; it never overrides client settings.<br/>
-        • For each txn/SKU, engine uses clientConfig[clientId] + ruleConfig to compute final points.
+        • Client settings (discount%, PG%, trigger, date match, card→point mapping) are separate configs.<br/>
+        • Base rule decides how much <b>earn value in ₹</b> to give from net margin.<br/>
+        • Cap rules bound the earn value in ₹ (not points).<br/>
+        • A later layer converts earn value into points per card variant using the mapping table.
       </div>
     </div>
   </div>
@@ -499,7 +631,9 @@
     }
 
     const rType = state.ruleType || "BASE";
-    const typeLabel = rType === "BASE" ? "Base earn rule" : "Cap / limit rule";
+    const typeLabel = rType === "BASE"
+      ? "Base earn rule (earn value in ₹)"
+      : "Cap / limit rule (on earn value in ₹)";
 
     lines.push(`${typeLabel} for ${state.clientId || "selected client(s)"}.`);
     if (state.ruleName) lines.push(`Name: “${state.ruleName}”.`);
@@ -539,17 +673,16 @@
         ? "net margin value (₹, excl. GST)"
         : "net margin % (on final price excl. GST)";
 
-      lines.push(`• Use margin slabs based on ${basisLabel}.`);
-
+      lines.push(`• Choose slab based on ${basisLabel}.`);
       const slabLines = [];
       if (state.slab1From || state.slab1To || state.slab1Share) {
-        slabLines.push(`  – ${state.slab1From || "?"} to ${state.slab1To || "?"} → reward ${state.slab1Share || 0}% of net margin value`);
+        slabLines.push(`  – ${state.slab1From || "?"} to ${state.slab1To || "?"} → reward ${state.slab1Share || 0}% of net margin value as earn value (₹)`);
       }
       if (state.slab2From || state.slab2To || state.slab2Share) {
-        slabLines.push(`  – ${state.slab2From || "?"} to ${state.slab2To || "?"} → reward ${state.slab2Share || 0}% of net margin value`);
+        slabLines.push(`  – ${state.slab2From || "?"} to ${state.slab2To || "?"} → reward ${state.slab2Share || 0}% of net margin value as earn value (₹)`);
       }
       if (state.slab3From || state.slab3To || state.slab3Share) {
-        slabLines.push(`  – ${state.slab3From || "?"} to ${state.slab3To || "?"} → reward ${state.slab3Share || 0}% of net margin value`);
+        slabLines.push(`  – ${state.slab3From || "?"} to ${state.slab3To || "?"} → reward ${state.slab3Share || 0}% of net margin value as earn value (₹)`);
       }
       if (slabLines.length > 0) {
         lines.push("• Slabs:");
@@ -557,17 +690,17 @@
       }
 
       const roundingLabel = {
-        CLIENT_DEFAULT: "client default rounding",
-        FLOOR: "round down",
-        CEIL: "round up",
+        CLIENT_DEFAULT: "client default rounding (applied later to points)",
+        FLOOR: "round down (points)",
+        CEIL: "round up (points)",
         NEAREST_1: "round to nearest 1 point",
         NEAREST_50: "round to nearest 50 points",
         NEAREST_100: "round to nearest 100 points"
       }[state.roundingMode || "CLIENT_DEFAULT"];
 
       lines.push("");
-      lines.push(`• Rounding for this rule: ${roundingLabel}.`);
-      lines.push("• Exactly one BASE rule applies per txn/SKU (no stacking).");
+      lines.push(`• Rounding strategy for points (after conversion): ${roundingLabel}.`);
+      lines.push("• Exactly one BASE rule applies per txn/SKU (no stacking of Base rules).");
     } else {
       let scopeLabel = {
         PER_TXN: "per transaction",
@@ -577,21 +710,21 @@
 
       let capDesc = "";
       switch (state.capType) {
-        case "ABSOLUTE_POINTS":
-          capDesc = `Max ${state.capValue || 0} points ${scopeLabel}.`;
+        case "ABSOLUTE_VALUE":
+          capDesc = `Max earn value = ₹${state.capValue || 0} ${scopeLabel}.`;
           break;
         case "PCT_FINAL_PRICE_INCL":
-          capDesc = `Max ${state.capValue || 0}% of final price (incl. GST) as points ${scopeLabel}.`;
+          capDesc = `Max earn value = ${state.capValue || 0}% of final price (incl. GST) ${scopeLabel}.`;
           break;
         case "PCT_FINAL_PRICE_EXCL":
-          capDesc = `Max ${state.capValue || 0}% of final price (excl. GST) as points ${scopeLabel}.`;
+          capDesc = `Max earn value = ${state.capValue || 0}% of final price (excl. GST) ${scopeLabel}.`;
           break;
         case "PCT_MARGIN_VALUE":
-          capDesc = `Max ${state.capValue || 0}% of net margin value as points ${scopeLabel}.`;
+          capDesc = `Max earn value = ${state.capValue || 0}% of net margin value ${scopeLabel}.`;
           break;
       }
       lines.push("• " + capDesc);
-      lines.push("• Multiple CAP rules can apply; engine uses the tightest limit.");
+      lines.push("• Multiple CAP rules can match; engine applies the tightest limit on earn value in ₹.");
     }
 
     if (state.ruleDescription) {
@@ -632,6 +765,149 @@
     document.getElementById("summaryText").textContent = buildHumanSummary(state);
     buildBadges(state);
     document.getElementById("jsonPreview").textContent = JSON.stringify(state, null, 2);
+  }
+
+  // Simple helper for rounding preview
+  function applyRounding(points, mode) {
+    if (isNaN(points)) return NaN;
+    if (!mode || mode === "CLIENT_DEFAULT") {
+      // For preview only, assume nearest 1 if client default; real system will use actual config.
+      return Math.round(points);
+    }
+    if (mode === "FLOOR") return Math.floor(points);
+    if (mode === "CEIL") return Math.ceil(points);
+    if (mode === "NEAREST_1") return Math.round(points);
+    if (mode === "NEAREST_50") return Math.round(points / 50) * 50;
+    if (mode === "NEAREST_100") return Math.round(points / 100) * 100;
+    return Math.round(points);
+  }
+
+  function pickSlab(basisValue, basisType, slabs) {
+    if (isNaN(basisValue)) return null;
+    for (const s of slabs) {
+      if (s.from === null || s.to === null || s.share === null) continue;
+      if (basisValue >= s.from && basisValue < s.to) return s;
+    }
+    return null;
+  }
+
+  function runPreview() {
+    const spIncl = parseFloat($("pSpIncl").value);
+    const cpIncl = parseFloat($("pCpIncl").value);
+    const gstPct = parseFloat($("pGstPct").value);
+    const clientDisc = parseFloat($("pClientDiscountPct").value);
+    const pgRate = parseFloat($("pPgRatePct").value);
+
+    if (isNaN(spIncl) || isNaN(cpIncl) || isNaN(gstPct) || isNaN(clientDisc) || isNaN(pgRate)) {
+      $("previewOutput").textContent = "Please fill Selling Price, Cost Price, GST%, client discount% and PG% to run preview.";
+      return;
+    }
+
+    const gstRate = gstPct / 100;
+    const finalPriceIncl = spIncl * (1 - (clientDisc / 100));
+    const finalPriceExcl = finalPriceIncl / (1 + gstRate);
+    const costExcl = cpIncl / (1 + gstRate);
+    const pgCost = pgRate / 100 * finalPriceIncl;
+    const totalCostExcl = costExcl + pgCost;
+    const netMarginValueExcl = finalPriceExcl - totalCostExcl;
+    const netMarginPctExcl = netMarginValueExcl / finalPriceExcl * 100;
+
+    // Slabs
+    const basis = $("slabBasis").value || "MARGIN_PCT";
+    const basisValue = basis === "MARGIN_VALUE" ? netMarginValueExcl : netMarginPctExcl;
+
+    const slabs = [
+      { from: parseFloat($("slab1From").value), to: parseFloat($("slab1To").value), share: parseFloat($("slab1Share").value), label: "Slab 1" },
+      { from: parseFloat($("slab2From").value), to: parseFloat($("slab2To").value), share: parseFloat($("slab2Share").value), label: "Slab 2" },
+      { from: parseFloat($("slab3From").value), to: parseFloat($("slab3To").value), share: parseFloat($("slab3Share").value), label: "Slab 3" }
+    ];
+
+    const validSlabs = slabs.filter(s => !isNaN(s.from) && !isNaN(s.to) && !isNaN(s.share));
+    const chosenSlab = pickSlab(basisValue, basis, validSlabs);
+
+    let earnValueBeforeCap = 0;
+    let shareUsed = 0;
+    let slabLabel = "No slab matched";
+
+    if (chosenSlab) {
+      shareUsed = chosenSlab.share;
+      earnValueBeforeCap = netMarginValueExcl * (shareUsed / 100);
+      slabLabel = `${chosenSlab.label}: ${chosenSlab.from}–${chosenSlab.to} with share ${shareUsed}%`;
+    }
+
+    // Apply preview cap (on earn value in ₹)
+    const pCapType = $("pCapType").value;
+    const pCapValue = parseFloat($("pCapValue").value);
+    let capValueRupees = null;
+
+    if (pCapType && !isNaN(pCapValue)) {
+      if (pCapType === "ABSOLUTE_VALUE") {
+        capValueRupees = pCapValue;
+      } else if (pCapType === "PCT_FINAL_PRICE_INCL") {
+        capValueRupees = pCapValue / 100 * finalPriceIncl;
+      } else if (pCapType === "PCT_FINAL_PRICE_EXCL") {
+        capValueRupees = pCapValue / 100 * finalPriceExcl;
+      } else if (pCapType === "PCT_MARGIN_VALUE") {
+        capValueRupees = pCapValue / 100 * netMarginValueExcl;
+      }
+    }
+
+    let earnValueAfterCap = earnValueBeforeCap;
+    let capNote = "No cap applied in preview.";
+    if (capValueRupees !== null && !isNaN(capValueRupees)) {
+      earnValueAfterCap = Math.min(earnValueBeforeCap, capValueRupees);
+      capNote = `Preview cap applied: earn value limited to ₹${capValueRupees.toFixed(2)}.`;
+    }
+
+    // Points per card
+    const card1Name = $("pCard1Name").value || "Card 1";
+    const card1Pv = parseFloat($("pCard1PointValue").value);
+    const card2Name = $("pCard2Name").value || "Card 2";
+    const card2Pv = parseFloat($("pCard2PointValue").value);
+    const roundingMode = $("roundingMode").value || "CLIENT_DEFAULT";
+
+    let cardLines = [];
+
+    function cardLine(name, pv) {
+      if (!pv || isNaN(pv) || pv <= 0) return `${name}: point value not set, cannot compute points.`;
+      const rawPoints = earnValueAfterCap / pv;
+      const roundedPoints = applyRounding(rawPoints, roundingMode);
+      return `${name}: point value ₹${pv.toFixed(2)} → raw ≈ ${rawPoints.toFixed(2)} pts → rounded ≈ ${isNaN(roundedPoints) ? "N/A" : roundedPoints + " pts"}`;
+    }
+
+    if (!isNaN(card1Pv)) cardLines.push(cardLine(card1Name, card1Pv));
+    if (!isNaN(card2Pv)) cardLines.push(cardLine(card2Name, card2Pv));
+    if (cardLines.length === 0) cardLines.push("No card point values provided. Fill Card 1 / Card 2 to see points.");
+
+    const out = [];
+    out.push("📦 Sample product & margin");
+    out.push(`SP (incl. GST): ₹${spIncl.toFixed(2)}`);
+    out.push(`CP (incl. GST): ₹${cpIncl.toFixed(2)}`);
+    out.push(`GST%: ${gstPct.toFixed(2)}%`);
+    out.push(`Client default discount% (preview): ${clientDisc.toFixed(2)}%`);
+    out.push(`PG% on final price (preview): ${pgRate.toFixed(2)}%`);
+    out.push("");
+    out.push(`Final price (incl. GST): ₹${finalPriceIncl.toFixed(2)}`);
+    out.push(`Final price (excl. GST): ₹${finalPriceExcl.toFixed(2)}`);
+    out.push(`Cost (excl. GST): ₹${costExcl.toFixed(2)}`);
+    out.push(`PG cost (₹): ₹${pgCost.toFixed(2)}`);
+    out.push(`Total cost (excl. GST): ₹${totalCostExcl.toFixed(2)}`);
+    out.push(`Net margin value (excl. GST): ₹${netMarginValueExcl.toFixed(2)}`);
+    out.push(`Net margin % (on final price excl. GST): ${netMarginPctExcl.toFixed(2)}%`);
+    out.push("");
+    out.push("🧮 Base earn (this rule)");
+    out.push(`Slab basis: ${basis === "MARGIN_VALUE" ? "Net margin value (₹)" : "Net margin %"}; value = ${basisValue.toFixed(2)}`);
+    out.push(`Chosen slab: ${slabLabel}`);
+    out.push(`Earn value before cap: ₹${earnValueBeforeCap.toFixed(2)}`);
+    out.push(capNote);
+    out.push(`Earn value after cap: ₹${earnValueAfterCap.toFixed(2)}`);
+    out.push("");
+    out.push("🎴 Points per card (using preview mapping)");
+    cardLines.forEach(l => out.push(l));
+    out.push("");
+    out.push("Note: This is a local preview. In production, preview should call backend so it uses real client settings, all Base rules, and all active Cap rules.");
+
+    $("previewOutput").textContent = out.join("\n");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
