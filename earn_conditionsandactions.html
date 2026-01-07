@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Earn Rule Builder – Enterprise</title>
+<style>
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:#f3f4f6;
+  color:#111827;
+}
+body { margin:0; padding:0; }
+.app-shell { max-width:1450px; margin:auto; padding:24px; }
+header h1 { margin:0; font-size:24px; }
+.subtitle { font-size:13px; color:#6b7280; margin-top:4px; }
+.layout {
+  display:grid;
+  grid-template-columns:minmax(0,2.6fr) minmax(360px,1fr);
+  gap:16px;
+}
+.card {
+  background:#fff;
+  border-radius:12px;
+  padding:16px;
+  border:1px solid #e5e7eb;
+  box-shadow:0 1px 3px rgba(15,23,42,.08);
+  margin-bottom:12px;
+}
+summary { cursor:pointer; font-weight:600; font-size:15px; }
+details[open] summary { margin-bottom:10px; }
+.form-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px 16px;
+}
+.field { display:flex; flex-direction:column; gap:4px; font-size:13px; }
+label { font-weight:500; }
+input, select, textarea {
+  border-radius:8px;
+  border:1px solid #d1d5db;
+  padding:6px 8px;
+  font-size:13px;
+  background:#f9fafb;
+}
+textarea { resize:vertical; min-height:48px; }
+.hint { font-size:12px; color:#6b7280; margin-bottom:6px; }
+
+.action-block {
+  background:#f9fafb;
+  border:1px dashed #94a3b8;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+.add-btn {
+  padding:6px 12px;
+  font-size:12px;
+  border-radius:8px;
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+}
+
+.summary-card { position:sticky; top:16px; }
+.summary-text { font-size:13px; line-height:1.5; white-space:pre-line; }
+.json-preview {
+  background:#0f172a;
+  color:#e5e7eb;
+  border-radius:8px;
+  padding:8px;
+  font-size:11px;
+  font-family:ui-monospace, monospace;
+  max-height:300px;
+  overflow:auto;
+}
+h4 { margin:6px 0; font-size:14px; }
+</style>
+</head>
+
+<body>
+<div class="app-shell">
+<header>
+  <h1>Earn Rule Builder</h1>
+  <div class="subtitle">
+    Margin-based earn rule engine with multiple conditional earn actions inside a single base rule.
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- LEFT -->
+<div>
+
+<!-- 0. RULE METADATA -->
+<details open class="card">
+  <summary>0. Rule Metadata</summary>
+  <div class="form-grid">
+    <div class="field"><label>Client / Program</label><select></select></div>
+    <div class="field"><label>Rule Name</label><input placeholder="e.g. HDFC Base Earn – Retail" /></div>
+    <div class="field"><label>Status</label><select><option>Draft</option><option>Active</option></select></div>
+    <div class="field"><label>Effective From</label><input type="date" /></div>
+    <div class="field"><label>Effective To</label><input type="date" /></div>
+  </div>
+  <div class="field">
+    <label>Description</label>
+    <textarea placeholder="Internal notes for audit & finance"></textarea>
+  </div>
+</details>
+
+<!-- 1. EARN ACTION BUILDER -->
+<details open class="card">
+<summary>1. Earn Action Builder</summary>
+
+<div class="hint">
+Each block defines <b>WHEN</b> it applies and <b>HOW</b> earn is calculated.  
+Engine picks <b>one winning block</b> per SKU based on specificity.
+</div>
+
+<div id="actionContainer">
+
+<!-- ACTION BLOCK -->
+<div class="action-block">
+
+<h4>Earn Action Block</h4>
+
+<!-- CONDITIONS -->
+<h4>1.1 Conditions – WHEN</h4>
+
+<h4>Customer</h4>
+<div class="form-grid">
+  <div class="field"><label>Customer Tier</label><input placeholder="Silver, Gold" /></div>
+  <div class="field"><label>Customer Segment</label><input /></div>
+</div>
+
+<h4>Card & Channel</h4>
+<div class="form-grid">
+  <div class="field"><label>Card Variant</label><input placeholder="Regalia, Infinia" /></div>
+  <div class="field"><label>Payment Mode</label>
+    <select>
+      <option>Card Only</option>
+      <option>Card + Points</option>
+    </select>
+  </div>
+  <div class="field"><label>Channel</label><input placeholder="App, Web" /></div>
+</div>
+
+<h4>Catalog</h4>
+<div class="form-grid">
+  <div class="field"><label>Include Categories</label><input /></div>
+  <div class="field"><label>Exclude Categories</label><input /></div>
+  <div class="field"><label>Include Brands</label><input /></div>
+  <div class="field"><label>Exclude Brands</label><input /></div>
+  <div class="field"><label>Include SKUs</label><textarea></textarea></div>
+  <div class="field"><label>Exclude SKUs</label><textarea></textarea></div>
+</div>
+
+<h4>Price & Margin</h4>
+<div class="form-grid">
+  <div class="field"><label>Min Selling Price</label><input /></div>
+  <div class="field"><label>Max Selling Price</label><input /></div>
+  <div class="field"><label>Min Margin %</label><input /></div>
+  <div class="field"><label>Min Margin ₹</label><input /></div>
+</div>
+
+<!-- ACTION -->
+<h4>1.2 Earn Logic – WHAT</h4>
+<div class="form-grid">
+  <div class="field">
+    <label>Earn Basis</label>
+    <select>
+      <option>Margin %</option>
+      <option>Margin Value (₹)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Margin Slabs</label>
+    <textarea placeholder="e.g.
+0–10% → 10%
+10–20% → 20%
+>20% → 30%"></textarea>
+  </div>
+
+  <div class="field">
+    <label>Optional Local Cap (% of margin)</label>
+    <input />
+  </div>
+</div>
+
+</div>
+</div>
+
+<button class="add-btn" id="addActionBtn">➕ Add Another Earn Action</button>
+
+<div class="hint">
+Precedence is automatic:  
+<b>SKU → Brand → Category → Default</b>, then most restrictive condition wins.
+</div>
+
+</details>
+
+<!-- 2. GLOBAL CAP -->
+<details open class="card">
+<summary>2. Global Cap Rule (Safety)</summary>
+<div class="form-grid">
+  <div class="field"><label>Cap Type</label>
+    <select>
+      <option>Absolute ₹</option>
+      <option>% of Final Price</option>
+      <option>% of Margin</option>
+    </select>
+  </div>
+  <div class="field"><label>Cap Value</label><input /></div>
+</div>
+</details>
+
+<!-- 3. SIMULATOR -->
+<details class="card">
+<summary>3. Simulator & Preview</summary>
+<div class="form-grid">
+  <div class="field"><label>SKU</label><input /></div>
+  <div class="field"><label>Selling Price</label><input /></div>
+  <div class="field"><label>Cost Price</label><input /></div>
+  <div class="field"><label>Card Paid</label><input /></div>
+  <div class="field"><label>Points Paid</label><input /></div>
+</div>
+</details>
+
+</div>
+
+<!-- RIGHT -->
+<div class="card summary-card">
+<h3>Rule Summary</h3>
+<div class="summary-text">
+• One base earn rule  
+• Multiple conditional earn actions  
+• Only one action executes per SKU  
+• Deterministic precedence (no priority numbers)  
+• Global cap applied last
+</div>
+
+<h4>JSON Payload</h4>
+<div class="json-preview">{}</div>
+</div>
+
+</div>
+</div>
+
+<script>
+document.getElementById('addActionBtn').addEventListener('click', () => {
+  const container = document.getElementById('actionContainer');
+  const first = container.querySelector('.action-block');
+  const clone = first.cloneNode(true);
+  clone.querySelectorAll('input, textarea').forEach(el => el.value = '');
+  clone.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  container.appendChild(clone);
+});
+</script>
+
+</body>
+</html>
