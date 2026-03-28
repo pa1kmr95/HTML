@@ -1,0 +1,4643 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shopstacc v2 api</title>
+    <meta
+      name="description"
+      content="REST API documentation for the Order Management System (OMS) Fynd Extension. Covers Auth, Catalog, Cart, Orders, Shipments, Inventory and Invoice endpoints."
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Initialize theme early to prevent flash
+      (function () {
+        const theme = localStorage.getItem("theme") || "light";
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        /* Light Theme (Default) */
+        --bg: #f8fafc;
+        --bg2: #ffffff;
+        --bg3: #f1f5f9;
+        --bg4: #e2e8f0;
+        --text: #0f172a;
+        --text2: #475569;
+        --text3: #64748b;
+        --accent: #4f46e5;
+        --accent2: #4338ca;
+        --accent-glow: rgba(79, 70, 229, 0.08);
+        --green: #10b981;
+        --green-bg: #ecfdf5;
+        --blue: #3b82f6;
+        --blue-bg: #eff6ff;
+        --amber: #f59e0b;
+        --amber-bg: #fffbeb;
+        --red: #ef4444;
+        --red-bg: #fef2f2;
+        --purple: #8b5cf6;
+        --purple-bg: #f5f3ff;
+        --cyan: #0891b2;
+        --border: #e2e8f0;
+        --border2: #cbd5e1;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --font: "Inter", system-ui, sans-serif;
+        --mono: "JetBrains Mono", monospace;
+
+        /* Theme-specific dynamic variables */
+        --title-gradient: linear-gradient(135deg, #4f46e5, #9333ea, #db2777);
+        --hero-glow: rgba(79, 70, 229, 0.1);
+        --code-key: #2563eb;
+        --code-str: #059669;
+        --code-num: #d97706;
+        --code-bool: #9333ea;
+        --code-null: #64748b;
+        --business-bg: #fdf2f8;
+        --business-border: #fbcfe8;
+        --auth-bg: #ecfeff;
+        --auth-border: #cffafe;
+        --nav-hover: rgba(79, 70, 229, 0.08);
+      }
+
+      [data-theme="dark"] {
+        --bg: #0a0e1a;
+        --bg2: #111827;
+        --bg3: #1a2035;
+        --bg4: #232b42;
+        --text: #e2e8f0;
+        --text2: #94a3b8;
+        --text3: #64748b;
+        --accent: #6366f1;
+        --accent2: #818cf8;
+        --accent-glow: rgba(99, 102, 241, 0.15);
+        --green: #22c55e;
+        --green-bg: rgba(34, 197, 94, 0.12);
+        --blue: #3b82f6;
+        --blue-bg: rgba(59, 130, 246, 0.12);
+        --amber: #f59e0b;
+        --amber-bg: rgba(245, 158, 11, 0.12);
+        --red: #ef4444;
+        --red-bg: rgba(239, 68, 68, 0.12);
+        --purple: #a855f7;
+        --purple-bg: rgba(168, 85, 247, 0.12);
+        --cyan: #06b6d4;
+        --border: #1e293b;
+        --border2: #334155;
+        --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+
+        /* Theme-specific dynamic variables overhead */
+        --title-gradient: linear-gradient(135deg, #e2e8f0, #6366f1, #a855f7);
+        --hero-glow: rgba(99, 102, 241, 0.18);
+        --code-key: #7dd3fc;
+        --code-str: #86efac;
+        --code-num: #fbbf24;
+        --code-bool: #c084fc;
+        --code-null: #94a3b8;
+        --business-bg: rgba(99, 102, 241, 0.05);
+        --business-border: rgba(99, 102, 241, 0.2);
+        --auth-bg: rgba(6, 182, 212, 0.1);
+        --auth-border: rgba(6, 182, 212, 0.2);
+        --nav-hover: rgba(99, 102, 241, 0.15);
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 24px;
+        font-size: 15px;
+      }
+      body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+      a {
+        color: var(--accent2);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* HERO */
+      .hero {
+        position: relative;
+        padding: 80px 0 60px;
+        text-align: center;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 80% 60% at 50% 0%,
+          var(--hero-glow),
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+      .hero h1 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: var(--title-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 12px;
+        position: relative;
+      }
+      .hero p {
+        color: var(--text2);
+        font-size: 1.05rem;
+        max-width: 620px;
+        margin: 0 auto 28px;
+      }
+      .hero .version {
+        display: inline-block;
+        padding: 5px 16px;
+        border-radius: 999px;
+        background: var(--accent-glow);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: var(--accent2);
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+
+      /* LAYOUT */
+      .wrapper {
+        display: flex;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+        gap: 32px;
+      }
+      .sidebar {
+        position: sticky;
+        top: 24px;
+        align-self: flex-start;
+        width: 280px;
+        min-width: 280px;
+        max-height: calc(100vh - 48px);
+        overflow-y: auto;
+        padding: 20px 0;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border2) transparent;
+      }
+      .main {
+        flex: 1;
+        min-width: 0;
+        padding-bottom: 120px;
+      }
+
+      /* SIDEBAR */
+      .sidebar h3 {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--text3);
+        padding: 18px 16px 8px;
+        margin: 0;
+      }
+      .sidebar a.nav-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        color: var(--text2);
+        border-radius: var(--radius-sm);
+        transition: 0.2s;
+      }
+      .sidebar a.nav-link:hover,
+      .sidebar a.nav-link.active {
+        background: var(--nav-hover);
+        color: var(--accent2);
+        text-decoration: none;
+      }
+      .sidebar .method-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .dot-get {
+        background: var(--green);
+      }
+      .dot-post {
+        background: var(--blue);
+      }
+      .dot-put {
+        background: var(--amber);
+      }
+      .dot-delete {
+        background: var(--red);
+      }
+      .dot-patch {
+        background: var(--purple);
+      }
+
+      /* SEARCH */
+      .search-box {
+        position: relative;
+        margin: 0 16px 12px;
+      }
+      .search-box input {
+        width: 100%;
+        padding: 10px 14px 10px 38px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border2);
+        background: var(--bg2);
+        color: var(--text);
+        font-size: 0.85rem;
+        outline: none;
+        transition: 0.25s;
+      }
+      .search-box input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+      }
+      .search-box svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text3);
+        width: 16px;
+        height: 16px;
+      }
+
+      /* SECTION */
+      .api-section {
+        margin-bottom: 48px;
+      }
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .section-title .icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+      }
+      .section-desc {
+        color: var(--text2);
+        font-size: 0.9rem;
+        margin-bottom: 24px;
+        line-height: 1.8;
+      }
+      .section-desc code,
+      .endpoint-body .desc code {
+        background: var(--bg3);
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-family: var(--mono);
+        font-size: 0.82em;
+        color: var(--accent2);
+        border: 1px solid var(--border);
+      }
+      .section-desc strong,
+      .endpoint-body .desc strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .section-desc pre,
+      .endpoint-body .desc pre {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--text2);
+        margin: 12px 0;
+        white-space: pre;
+      }
+      .section-desc pre code,
+      .endpoint-body .desc pre code {
+        background: none;
+        padding: 0;
+        border: none;
+        font-size: inherit;
+        color: inherit;
+      }
+
+      /* ENDPOINT CARD */
+      .endpoint {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 16px;
+        overflow: hidden;
+        transition:
+          border-color 0.25s,
+          box-shadow 0.25s;
+      }
+      .endpoint:hover {
+        border-color: var(--border2);
+        box-shadow: var(--shadow);
+      }
+      .endpoint-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .method-badge {
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+      }
+      .method-GET {
+        background: var(--green-bg);
+        color: var(--green);
+        border: 1px solid rgba(34, 197, 94, 0.25);
+      }
+      .method-POST {
+        background: var(--blue-bg);
+        color: var(--blue);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+      }
+      .method-PUT {
+        background: var(--amber-bg);
+        color: var(--amber);
+        border: 1px solid rgba(245, 158, 11, 0.25);
+      }
+      .method-DELETE {
+        background: var(--red-bg);
+        color: var(--red);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+      }
+      .method-PATCH {
+        background: var(--purple-bg);
+        color: var(--purple);
+        border: 1px solid rgba(168, 85, 247, 0.25);
+      }
+      .endpoint-path {
+        font-family: var(--mono);
+        font-size: 0.88rem;
+        color: var(--text);
+        font-weight: 500;
+        flex: 1;
+      }
+      .endpoint-summary {
+        color: var(--text2);
+        font-size: 0.82rem;
+        margin-left: auto;
+        text-align: right;
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .endpoint-toggle {
+        color: var(--text3);
+        transition: transform 0.3s;
+        flex-shrink: 0;
+      }
+      .endpoint.open .endpoint-toggle {
+        transform: rotate(180deg);
+      }
+
+      /* ENDPOINT BODY */
+      .endpoint-body {
+        display: none;
+        padding: 0 20px 20px;
+        border-top: 1px solid var(--border);
+        animation: slideDown 0.3s ease;
+      }
+      .endpoint.open .endpoint-body {
+        display: block;
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .endpoint-body .desc {
+        color: var(--text2);
+        font-size: 0.88rem;
+        margin: 16px 0;
+        line-height: 1.7;
+      }
+      .endpoint-body h4 {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text3);
+        margin: 20px 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .auth-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: var(--auth-bg);
+        color: var(--cyan);
+        border: 1px solid var(--auth-border);
+        margin: 8px 0;
+      }
+
+      /* TABLE */
+      .param-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.84rem;
+      }
+      .param-table th {
+        text-align: left;
+        padding: 10px 12px;
+        background: var(--bg3);
+        color: var(--text2);
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .param-table th:first-child {
+        border-radius: var(--radius-sm) 0 0 0;
+      }
+      .param-table th:last-child {
+        border-radius: 0 var(--radius-sm) 0 0;
+      }
+      .param-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+      }
+      .param-table tr:last-child td {
+        border-bottom: none;
+      }
+      .param-table .param-name {
+        font-family: var(--mono);
+        font-weight: 500;
+        color: var(--accent2);
+        font-size: 0.82rem;
+      }
+      .param-table .param-type {
+        color: var(--text3);
+        font-size: 0.78rem;
+      }
+      .param-table .required {
+        color: var(--red);
+        font-size: 0.7rem;
+        font-weight: 700;
+        margin-left: 4px;
+      }
+
+      /* CODE BLOCK */
+      .code-block {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        color: var(--text2);
+        position: relative;
+        max-height: 350px;
+        overflow-y: auto;
+      }
+      .code-block .key {
+        color: var(--code-key);
+      }
+      .code-block .str {
+        color: var(--code-str);
+      }
+      .code-block .num {
+        color: var(--code-num);
+      }
+      .code-block .bool {
+        color: var(--code-bool);
+      }
+      .code-block .null {
+        color: var(--code-null);
+      }
+      .copy-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--text2);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        cursor: pointer;
+        transition: 0.2s;
+        font-family: var(--font);
+      }
+      .copy-btn:hover {
+        background: var(--bg4);
+        color: var(--text);
+      }
+
+      /* RESPONSE TABS */
+      .resp-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+      .resp-tab {
+        padding: 5px 14px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text2);
+        transition: 0.2s;
+      }
+      .resp-tab.active,
+      .resp-tab:hover {
+        border-color: var(--accent);
+        color: var(--accent2);
+        background: var(--accent-glow);
+      }
+      .resp-tab.s2xx {
+        color: var(--green);
+      }
+      .resp-tab.s4xx {
+        color: var(--amber);
+      }
+      .resp-tab.s5xx {
+        color: var(--red);
+      }
+
+      /* MOBILE */
+      @media (max-width: 900px) {
+        .wrapper {
+          flex-direction: column;
+        }
+        .sidebar {
+          position: static;
+          width: 100%;
+          max-height: none;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 16px;
+        }
+        .hero h1 {
+          font-size: 2rem;
+        }
+      }
+
+      /* SCROLLBAR */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 3px;
+      }
+
+      /* BACK TO TOP */
+      .back-top {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        transition: 0.3s;
+        z-index: 99;
+        font-size: 1.2rem;
+      }
+      .back-top:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 28px rgba(99, 102, 241, 0.5);
+      }
+      .back-top.show {
+        display: flex;
+      }
+
+      /* THEME TOGGLE */
+      .theme-btn {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow);
+        transition: 0.3s;
+        z-index: 1000;
+        font-size: 1.2rem;
+      }
+      .theme-btn:hover {
+        transform: scale(1.1);
+        border-color: var(--accent);
+      }
+      [data-theme="dark"] .theme-btn .sun {
+        display: block;
+      }
+      [data-theme="dark"] .theme-btn .moon {
+        display: none;
+      }
+      .theme-btn .sun {
+        display: none;
+      }
+      .theme-btn .moon {
+        display: block;
+      }
+
+      /* BUSINESS DOCS */
+      .business-box {
+        background: var(--business-bg);
+        border: 1px solid var(--business-border);
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+      }
+      .business-box::after {
+        content: "BUSINESS CONTEXT";
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: var(--accent);
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 0 0 0 8px;
+        letter-spacing: 1px;
+      }
+      .business-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: var(--bg3);
+        color: var(--text2);
+        border: 1px solid var(--border);
+        margin-bottom: 12px;
+      }
+      .business-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--accent2);
+        margin-bottom: 6px;
+        display: block;
+      }
+      .business-text {
+        font-size: 0.88rem;
+        color: var(--text2);
+        line-height: 1.6;
+      }
+      .endpoint-business-context {
+        background: var(--bg3);
+        border-left: 4px solid var(--cyan);
+        padding: 12px 16px;
+        margin: 16px 0;
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      }
+      .endpoint-business-context strong {
+        color: var(--cyan);
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+      .endpoint-business-context p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text2);
+      }
+    </style>
+  </head>
+  <body>
+    <button class="theme-btn" id="themeToggle" title="Toggle Theme">
+      <span class="sun">☀️</span>
+      <span class="moon">🌙</span>
+    </button>
+    <!-- HERO -->
+    <section class="hero">
+      <h1>Shopstacc v2 api</h1>
+      <p>
+        REST API documentation for the Order Management System — covering
+        Authentication, Catalog, Cart, Orders, Shipments, Inventory & Invoicing.
+      </p>
+    </section>
+
+    <div class="wrapper">
+      <!-- SIDEBAR -->
+      <nav class="sidebar" id="sidebar">
+        <div class="search-box">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search endpoints…" />
+        </div>
+        <div id="navLinks"></div>
+      </nav>
+
+      <!-- MAIN CONTENT -->
+      <main class="main" id="mainContent"></main>
+    </div>
+
+    <button class="back-top" id="backTop" title="Back to top">↑</button>
+
+    <script>
+      // ── API DATA (non-admin only) ──────────────────────────────────
+      const commonError400 = {
+        success: false,
+        message: "Bad Request",
+        statusCode: 400,
+        error: "Required parameters are missing or validation failed.",
+      };
+      const commonError401 = {
+        success: false,
+        message: "Unauthorized",
+        statusCode: 401,
+        error: "Missing or invalid authorization token.",
+      };
+      const commonError404 = {
+        success: false,
+        message: "Not Found",
+        statusCode: 404,
+        error: "The requested resource could not be found.",
+      };
+      const commonError500 = {
+        success: false,
+        message: "Internal Server Error",
+        statusCode: 500,
+        error: "An unexpected error occurred on the server.",
+      };
+
+      const API_SECTIONS = [
+        {
+          id: "auth",
+          title: "Authentication",
+          icon: "🔐",
+          desc:
+            "All API requests require authentication. The OMS API uses <strong>HMAC-SHA256 signature-based authentication</strong> for token generation and <strong>Bearer JWT (JWE)</strong> for accessing protected resources.<br><br>" +
+            "<strong>🔄 Authentication Flow:</strong><br>" +
+            "1. Obtain your <code>accessKey</code> and <code>secretKey</code> from the Shopstacc v2 team.<br>" +
+            "2. Generate an HMAC signature using <code>/api/auth/generate-signature</code> (for testing) or compute it client-side.<br>" +
+            "3. Call <code>/api/auth/generate-token</code> with headers <code>X-Access-Key</code>, <code>X-Timestamp</code>, and <code>X-Signature</code> to receive an encrypted <strong>JWE access token</strong> (expires in 1 hour) and a <strong>refresh token</strong>.<br>" +
+            "4. Use the access token as <code>Authorization: Bearer &lt;token&gt;</code> on all protected endpoints (Catalog, Cart, Orders, etc.).<br>" +
+            "5. When the access token expires, call <code>/api/auth/refresh</code> with the refresh token to obtain a new access token without re-authenticating.<br><br>" +
+            "<strong>🔑 HMAC Signature Computation:</strong><br>" +
+            "<code>canonical = X-Access-Key + X-Timestamp</code><br>" +
+            "<code>signature = HMAC-SHA256(secretKey, canonical).hex()</code><br><br>" +
+            "<strong>💻 Node.js Example (Client-Side):</strong>" +
+            '<pre><code>const crypto = require("crypto");\n\nconst accessKey = "your_access_key";\nconst secretKey = "your_secret_key";\n\nconst ts = Date.now().toString();\nconst signature = crypto\n  .createHmac("sha256", secretKey)\n  .update(accessKey + ts)\n  .digest("hex");\n\nconsole.log({\n  "X-Access-Key": accessKey,\n  "X-Timestamp": ts,\n  "X-Signature": signature\n});</code></pre>' +
+            "⚠️ Requests with timestamps outside <strong>±5 minutes</strong> of server time are rejected to prevent replay attacks.",
+          businessOverview:
+            "Security is paramount for partner integrations. This section ensures that every request is both authorized and authentic. We use HMAC signatures to verify that requests haven't been tampered with and JWTs to handle session-based access to customer data and orders. This two-tier system provides robust protection against common web attacks while remaining scalable for high-volume transactions.",
+          endpoints: [
+            {
+              method: "POST",
+              path: "/api/auth/generate-token",
+              summary: "Generate access & refresh tokens",
+              businessContext: "This is the primary 'handshake' between your system and the OMS. Successfully calling this endpoint grants you a temporary 'key' (Access Token) to perform operations like fetching products or creating orders.",
+              desc:
+                "Validates the HMAC signature headers and issues encrypted JWE access + refresh tokens for the tenant. " +
+                "The access token is a <strong>JWE (JSON Web Encryption)</strong> token valid for <strong>1 hour</strong>. " +
+                "The refresh token can be used to obtain new access tokens without re-authenticating.<br><br>" +
+                "<strong>How it works:</strong><br>" +
+                "• Compute the canonical string: <code>canonical = X-Access-Key + X-Timestamp</code><br>" +
+                "• Generate the HMAC-SHA256 digest: <code>signature = HMAC-SHA256(secretKey, canonical).hex()</code><br>" +
+                "• Send all three headers with the request.<br>" +
+                "• The server validates the signature, checks the timestamp window (±5 min), and returns the tokens.<br><br>" +
+                "⚠️ <strong>Important:</strong> The <code>X-Timestamp</code> must be a Unix timestamp in <strong>milliseconds</strong> (e.g. <code>Date.now()</code>). " +
+                "Requests outside the allowed clock-skew window are rejected to prevent replay attacks.",
+              auth: "HMAC Signature",
+              params: [
+                {
+                  name: "X-Access-Key",
+                  in: "header",
+                  type: "string",
+                  required: true,
+                  desc: "Tenant access key — unique identifier for your tenant credential (e.g. ak_live_abc123)",
+                },
+                {
+                  name: "X-Timestamp",
+                  in: "header",
+                  type: "string",
+                  required: true,
+                  desc: "Unix timestamp in milliseconds (numeric string). Must be within ±5 minutes of server time.",
+                },
+                {
+                  name: "X-Signature",
+                  in: "header",
+                  type: "string",
+                  required: true,
+                  desc: "HMAC-SHA256 hex digest (64 lowercase hex chars) computed from canonical = accessKey + timestamp",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Token generated successfully",
+                  statusCode: 200,
+                  data: {
+                    accessToken: "eyJ...",
+                    refreshToken: "eyJ...",
+                    expiresIn: "1h",
+                  },
+                },
+                401: {
+                  success: false,
+                  message: "Unauthorized",
+                  statusCode: 401,
+                  error: "Invalid HMAC signature or API key.",
+                },
+                500: commonError500,
+              },
+            },
+            {
+              method: "POST",
+              path: "/api/auth/refresh",
+              summary: "Refresh access token",
+              desc:
+                "Exchange a valid refresh token for a new access token. Use this endpoint when your current access token has expired " +
+                "to avoid requiring the user to re-authenticate.<br><br>" +
+                "<strong>How it works:</strong><br>" +
+                "• Send the <code>refreshToken</code> received from <code>/api/auth/generate-token</code> in the request body.<br>" +
+                "• Include the <code>X-Access-Key</code> header to identify the tenant.<br>" +
+                "• The server validates the refresh token, verifies it hasn't been revoked, and issues a new access token valid for another hour.<br><br>" +
+                "💡 <strong>Tip:</strong> Implement proactive token refresh (e.g. 5 minutes before expiry) to avoid interrupted API calls.",
+              auth: "X-Access-Key",
+              params: [
+                {
+                  name: "X-Access-Key",
+                  in: "header",
+                  type: "string",
+                  required: true,
+                  desc: "Tenant access key — must match the key used during original token generation",
+                },
+              ],
+              body: { refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+              response: {
+                200: {
+                  success: true,
+                  message: "Token refreshed successfully",
+                  statusCode: 200,
+                  data: { accessToken: "eyJ...", expiresIn: "1h" },
+                },
+                401: {
+                  success: false,
+                  message: "Unauthorized",
+                  statusCode: 401,
+                  error: "Invalid or expired refresh token.",
+                },
+                500: commonError500,
+              },
+            },
+            {
+              method: "POST",
+              path: "/api/auth/generate-signature",
+              summary: "Generate HMAC signature",
+              desc:
+                "Utility endpoint for testing and integration — generates an HMAC-SHA256 signature from the provided <code>accessKey</code> and <code>secretKey</code>.<br><br>" +
+                "<strong>How it works:</strong><br>" +
+                "• Send your <code>accessKey</code> and <code>secretKey</code> in the request body.<br>" +
+                "• The server computes the HMAC signature using the current server timestamp and returns both the <code>signature</code> and <code>timestamp</code>.<br>" +
+                "• Use the returned values directly as <code>X-Signature</code> and <code>X-Timestamp</code> headers in subsequent <code>/api/auth/generate-token</code> calls.<br><br>" +
+                "⚠️ <strong>Security Note:</strong> This endpoint is intended for <strong>development and testing only</strong>. In production, compute the HMAC signature on the client side to avoid sending your <code>secretKey</code> over the network.",
+              body: {
+                accessKey: "ak_live_abc123",
+                secretKey: "sk_live_xyz789",
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Signature generated",
+                  statusCode: 200,
+                  data: { signature: "a3f2c1...", timestamp: 1741000000000 },
+                },
+                400: commonError400,
+                500: commonError500,
+              },
+            },
+          ],
+        },
+
+        {
+          id: "health",
+          title: "Health",
+          icon: "💚",
+          desc: "Service health check endpoint. Use this to verify that the OMS API service is running and all dependencies (database, memory) are healthy.",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/health",
+              summary: "Service health check",
+              desc: "Returns the current health status of the service including database connectivity, memory heap usage, RSS memory, and process uptime. No authentication required.",
+              response: {
+                200: {
+                  status: "ok",
+                  info: {
+                    database: { status: "up" },
+                    memory_heap: { status: "up", usedMB: 45 },
+                    memory_rss: { status: "up", usedMB: 120 },
+                  },
+                  details: {
+                    uptime: 12345.67,
+                    timestamp: "2026-03-26T06:00:00.000Z",
+                  },
+                },
+                503: {
+                  status: "error",
+                  error: "Database connection failed.",
+                  statusCode: 503,
+                },
+              },
+            },
+          ],
+        },
+
+        {
+          id: "customers",
+          title: "Customer Onboarding",
+          icon: "👤",
+          desc:
+            "Customer registration, login, and session management flows. All endpoints require a valid <strong>Bearer JWT</strong> access token.<br><br>" +
+            "<strong>📝 Available Operations:</strong><br>" +
+            "• <strong>Register</strong> — Create a new customer account with name, mobile, and email.<br>" +
+            "• <strong>Login</strong> — Authenticate an existing customer by mobile number to get a session cookie.<br>" +
+            "• <strong>Get Customer Info</strong> — Retrieve customer details using a session cookie token.",
+          businessOverview:
+             "The customer journey starts here. This module manages the identity of individuals shopping on your platform. It links their mobile numbers to unique internal profiles, enabling personalized experiences, cart persistence across devices, and historical order tracking. A seamless onboarding flow is critical for high conversion rates.",
+          endpoints: [
+            {
+              method: "POST",
+              path: "/api/customers/register",
+              summary: "Register a new customer",
+              businessContext: "Converts a visitor into a known customer. Capturing accurate contact details like mobile and email is vital for order notifications and marketing communication.",
+              desc:
+                "Creates a new customer account on the platform. All fields are <strong>required</strong>. The mobile number must be exactly <strong>10 digits</strong> and the email must be a valid email format.<br><br>" +
+                "On success, a <code>customerSession</code> object is returned containing the session <code>cookie</code> and <code>user_id</code>. The cookie value (formatted as <code>f.session=&lt;cookie_value&gt;</code>) should be passed as the <code>x-cookie</code> header in subsequent Cart and Order requests.",
+              auth: "Bearer JWT",
+              bodyFields: [
+                {
+                  name: "firstName",
+                  type: "string",
+                  required: true,
+                  desc: "Customer's first name",
+                },
+                {
+                  name: "lastName",
+                  type: "string",
+                  required: true,
+                  desc: "Customer's last name",
+                },
+                {
+                  name: "mobileNumber",
+                  type: "string",
+                  required: true,
+                  desc: "10-digit mobile number (exactly 10 characters)",
+                },
+                {
+                  name: "emailId",
+                  type: "string",
+                  required: true,
+                  desc: "Valid email address (e.g. john.doe@example.com)",
+                },
+                {
+                  name: "domain",
+                  type: "string",
+                  required: true,
+                  desc: "Storefront domain (e.g. example.shopstacc.com)",
+                },
+              ],
+              body: {
+                firstName: "John",
+                lastName: "Doe",
+                mobileNumber: "9876543210",
+                emailId: "john.doe@example.com",
+                domain: "example.shopstacc.com",
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Customer registered successfully",
+                  statusCode: 200,
+                  data: { customerSession: { cookie: "...", user_id: "..." } },
+                },
+                400: {
+                  success: false,
+                  message: "Bad Request",
+                  statusCode: 400,
+                  error: "Mobile number already registered.",
+                },
+                500: commonError500,
+              },
+            },
+            {
+              method: "POST",
+              path: "/api/customers/login",
+              summary: "Customer login",
+              desc:
+                "Authenticates an existing customer using their mobile number and returns a session cookie for subsequent requests. The mobile number must be exactly <strong>10 digits</strong>.<br><br>" +
+                "The returned <code>customerSession.cookie</code> value (formatted as <code>f.session=&lt;cookie_session_value&gt;</code>) should be passed as the <code>x-cookie</code> header in all subsequent Cart and Order API calls.",
+              auth: "Bearer JWT",
+              bodyFields: [
+                {
+                  name: "mobileNumber",
+                  type: "string",
+                  required: true,
+                  desc: "10-digit registered mobile number (exactly 10 characters)",
+                },
+                {
+                  name: "domain",
+                  type: "string",
+                  required: true,
+                  desc: "Storefront domain (e.g. example.fynd.com)",
+                },
+              ],
+              body: { mobileNumber: "9876543210", domain: "example.fynd.com" },
+              response: {
+                200: {
+                  success: true,
+                  message: "Customer logged in successfully",
+                  statusCode: 200,
+                  data: {
+                    mobileNumber: "9876543210",
+                    customerSession: { cookie: "...", user_id: "..." },
+                  },
+                },
+                401: {
+                  success: false,
+                  message: "Unauthorized",
+                  statusCode: 401,
+                  error: "Invalid mobile number or credentials.",
+                },
+                500: commonError500,
+              },
+            },
+            {
+              method: "POST",
+              path: "/api/customers/getCustomerInfo",
+              summary: "Customer info with token",
+              desc: "Retrieves customer profile information using a session cookie token. The <code>cookieToken</code> is the value obtained from the <code>customerSession.cookie</code> field returned by the register or login endpoints.",
+              auth: "Bearer JWT",
+              bodyFields: [
+                {
+                  name: "cookieToken",
+                  type: "string",
+                  required: true,
+                  desc: "Session cookie token obtained from register/login response (customerSession.cookie)",
+                },
+              ],
+              body: { cookieToken: "some-cookie-token" },
+              response: {
+                200: {
+                  success: true,
+                  message: "Customer info retrieved successfully",
+                  statusCode: 200,
+                  data: {},
+                },
+                401: commonError401,
+                500: commonError500,
+              },
+            },
+          ],
+        },
+        {
+          id: "brands",
+          title: "Catalog › Brands",
+          icon: "🏷️",
+          desc: "List all available brands with filtering options by department and pagination support. You can get the available departments from the query departments.",
+          businessOverview:
+            "Brands are a primary way customers browse collections. This section allows you to retrieve all brands associated with your store, filterable by department (e.g., Electronics, Fashion). Managing these helps in building brand-specific landing pages and navigation menus.",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/catalog/brands",
+              summary: "Get all brands",
+              businessContext: "Useful for building 'Shop by Brand' sections on the homepage. It provides the brand name, logo, and slug needed for deep-linking to filtered product lists.",
+              desc: "Fetches brands and supports filtering by department and pagination.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "department",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: 'Filter by department slug: "e.g. fashion, electronics, home-decor"',
+                },
+                {
+                  name: "pageNo",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "Page number (default 1)",
+                },
+                {
+                  name: "pageSize",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "Items per page (default 20, max 100)",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Brands retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    brands: {
+                      items: [
+                        {
+                          custom_config: {},
+                          description: "A description",
+                          name: "A name",
+                          uid: 42,
+                          departments: ["Engineering"],
+                          discount: "discount",
+                          slug: "slug",
+                        },
+                      ],
+                      page: {
+                        current: 42,
+                        next_id: "next_id",
+                        has_previous: true,
+                        has_next: true,
+                        item_total: 42,
+                        type: "type",
+                        size: 42,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          id: "categories",
+          title: "Catalog › Categories",
+          icon: "📂",
+          desc: "List all available product categories organized by department with hierarchical structure and filtering options. You can get the available departments from the query departments.",
+          businessOverview:
+            "Categories provide the logical taxonomy of your store. From top-level departments down to specific sub-categories, this data is essential for building mega-menus and hierarchical sidebars that help customers narrow down their choices.",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/catalog/categories",
+              summary: "Get all categories",
+              businessContext: "Returns the entire category tree. Use this to render navigation bars. Each category includes banners and slugs for visual and functional integration.",
+              desc: "Fetches categories and supports filtering by department.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "department",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Filter by department slug",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Categories retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    categories: {
+                      data: [
+                        {
+                          department: "electronics",
+                          items: [
+                            {
+                              _custom_json: {},
+                              action: {
+                                page: {
+                                  params: null,
+                                  query: {
+                                    category: ["mobiles-tablets"],
+                                    department: ["electronics"],
+                                  },
+                                  type: "products",
+                                },
+                                type: "page",
+                              },
+                              banners: {
+                                landscape: {
+                                  alt: null,
+                                  meta: null,
+                                  type: "image",
+                                  url: "https://cdn.fynd.com/v2/falling-surf-7c8bb8/fyprod/wrkr/category/pictures/landscape-banner/original/TrzYTLd-nL-WsG2AS1UB-httpshdn-1.jpeg",
+                                },
+                                portrait: {
+                                  alt: null,
+                                  type: "image",
+                                  url: "https://cdn.fynd.com/v2/falling-surf-7c8bb8/fyprod/wrkr/category/pictures/portrait-banner/original/HgkSae2GKT-AZhtsjOIj-httpshdn-1.jpeg",
+                                },
+                              },
+                              childs: [
+                                {
+                                  _custom_json: {},
+                                  childs: [
+                                    {
+                                      _custom_json: {
+                                        "am-test": [
+                                          {
+                                            file_type: ["png"],
+                                            url: "https://cdn.fynd.com/v2/falling-surf-7c8bb8/fyprod/wrkr/misc/general/free/original/Y2cQx6iNs-image-(8).png",
+                                            target: null,
+                                          },
+                                        ],
+                                      },
+                                      childs: [],
+                                      name: "Smart Phones",
+                                      slug: "smart-cellphones",
+                                      uid: 892,
+                                      action: {
+                                        page: {
+                                          params: null,
+                                          query: {
+                                            category: ["smart-cellphones"],
+                                            department: ["electronics"],
+                                          },
+                                          type: "products",
+                                        },
+                                        type: "page",
+                                      },
+                                      banners: {
+                                        landscape: {
+                                          alt: null,
+                                          meta: null,
+                                          type: "image",
+                                          url: "https://cdn.fynd.com/v2/falling-surf-7c8bb8/fyprod/wrkr/media/banner/category/original/15350_b3d345fe992b4c929032ef623426701d.jpg",
+                                        },
+                                        portrait: {
+                                          alt: null,
+                                          type: "image",
+                                          url: "https://cdn.fynd.com/v2/falling-surf-7c8bb8/fyprod/wrkr/media/banner_portrait/category/original/15349_03230e52954a4fecb9e0ef517a66e1dc.jpg",
+                                        },
+                                      },
+                                    },
+                                  ],
+                                  name: "Smart Phone",
+                                  slug: "smart-phone",
+                                  uid: 883,
+                                  action: {
+                                    page: {
+                                      params: null,
+                                      query: {
+                                        category: ["smart-phone"],
+                                        department: ["electronics"],
+                                      },
+                                      type: "products",
+                                    },
+                                    type: "page",
+                                  },
+                                  banners: {
+                                    landscape: {
+                                      alt: null,
+                                      meta: null,
+                                      type: "image",
+                                      url: "https://cdn.fynd.com/v2/falling-surf-7c8bb8/fyprod/wrkr/media/banner/category/original/13611_68ebdefb43ff4da28dfe781cef4be8a5.jpg",
+                                    },
+                                    portrait: {
+                                      alt: null,
+                                      meta: null,
+                                      type: "image",
+                                      url: "https://cdn.fynd.com/v2/falling-surf-7c8bb8/fyprod/wrkr/media/banner_portrait/category/original/13610_cbef32edeed542d08a91a909ee8d774f.jpg",
+                                    },
+                                  },
+                                },
+                              ],
+                              name: "Mobiles & Tablets",
+                              slug: "mobiles-tablets",
+                              uid: 881,
+                            },
+                          ],
+                        },
+                      ],
+                      departments: [
+                        {
+                          slug: "electronics",
+                          uid: 10,
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          id: "products",
+          title: "Catalog › Products",
+          icon: "📦",
+          desc: "Browse, search, and retrieve product information from the catalog. Search and list products using advanced filtering options such as brand, category, price range, and attributes like size or color, along with sorting and pagination for efficient browsing. Retrieve comprehensive product details using the product slug, including pricing, attributes, specifications, availability, and metadata. Fetch size-level pricing and availability across different locations and fulfillment options using the product slug and size to ensure accurate, location-based product information.",
+          businessOverview:
+             "The core of your e-commerce engine. This section handles global search, complex filtering (size, color, price), and detailed product specifications. It's designed to handle high-concurrency read requests for your Product Listing Pages (PLP) and Product Display Pages (PDP).",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/catalog/products",
+              summary: "Get all products",
+              businessContext: "Powers your main search and category pages. Supports complex query logic like 'Nike shoes under $500' via the filterQuery parameter.",
+              desc: "Search and list products using advanced filtering options such as brand, category, price range, and attributes like size or color, along with sorting and pagination for efficient browsing.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "pageNo",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "Page number",
+                },
+                {
+                  name: "pageSize",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "Products per page",
+                },
+                {
+                  name: "search",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Search query for product name, brand, or category, e.g. 'nike shoes' or 'laptop'.",
+                },
+                {
+                  name: "filterQuery",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Encoded filter string like advanced filter query string with conditions, e.g. 'brand.name:nike||price:[100:::500]'. The filterQuery allows advanced filters using || for OR, ::: for AND, and [min TO max] for ranges. For example, f=brand.name:nike||brand.name:adidas:::price:[100 TO 500] translates to (brand.name:(nike OR adidas)) AND price:[100 TO 500].",
+                },
+                {
+                  name: "sortOn",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Sort products by criteria, e.g. 'price_asc', 'popularity', 'discount_dsc', 'rating_dsc'.",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Products retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    products: {
+                      sort_on: [
+                        {
+                          display: "display",
+                          is_selected: true,
+                          logo: "logo",
+                          name: "A name",
+                          value: "value",
+                        },
+                      ],
+                      page: {
+                        current: 42,
+                        has_previous: true,
+                        has_next: true,
+                        item_total: 42,
+                        size: 42,
+                      },
+                      items: [
+                        {
+                          color: "#e10098",
+                          item_code: "item_code",
+                          item_type: "item_type",
+                          has_variant: true,
+                          uid: 42,
+                          attributes: {},
+                          custom_config: {},
+                          description: "A description",
+                          discount: "discount",
+                          highlights: ["highlights"],
+                          image_nature: "image_nature",
+                          is_dependent: true,
+                          name: "A name",
+                          product_group_tag: ["product_group_tag"],
+                          product_online_date: "product_online_date",
+                          rating: 30.7,
+                          rating_count: 42,
+                          short_description: "short_description",
+                          similars: ["similars"],
+                          slug: "slug",
+                          tags: ["tags"],
+                          teaser_tag: "teaser_tag",
+                          tryouts: ["tryouts"],
+                          type: "type",
+                          identifiers: ["08a16b83-9094-4e89-8c05-2ccadd5c1c7e"],
+                          sizes: ["Large"],
+                          sellable: true,
+                          country_of_origin: "country_of_origin",
+                          is_tryout: true,
+                          channel: "channel",
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/catalog/products/{slug}",
+              summary: "Get product detail by slug",
+              desc: "Retrieve comprehensive product details using the product slug, including pricing, attributes, specifications, availability, and metadata.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "slug",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "URL-friendly identifier of the product to retrieve, e.g. 'nike-air-max-270' or 'iphone-14-pro'.",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Product detail retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    product: {
+                      brand: {
+                        _custom_json: {},
+                        custom_config: {},
+                        description: "A description",
+                        name: "A name",
+                        uid: 42,
+                        id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                      },
+                      color: "#e10098",
+                      item_code: "item_code",
+                      item_type: "item_type",
+                      has_variant: true,
+                      uid: 42,
+                      grouped_attributes: [
+                        {
+                          title: "title",
+                          id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                        },
+                      ],
+                      attributes: {},
+                      custom_config: {},
+                      media: [
+                        {
+                          alt: "alt",
+                          type: "type",
+                          url: "https://website.com",
+                        },
+                      ],
+                      sizes: {
+                        discount: "discount",
+                        multi_size: true,
+                        sellable: true,
+                        tags: ["tags"],
+                        custom_order: {},
+                        no_of_boxes: 42,
+                        teaser_tag: {},
+                      },
+                      department: {
+                        name: "A name",
+                        slug: "slug",
+                        uid: 42,
+                      },
+                      custom_order: {
+                        is_custom_order: true,
+                        manufacturing_time: 42,
+                        manufacturing_time_unit: "manufacturing_time_unit",
+                      },
+                      custom_meta: [
+                        {
+                          key: "key",
+                          value: "value",
+                        },
+                      ],
+                      description: "A description",
+                      discount: "discount",
+                      highlights: ["highlights"],
+                      image_nature: "image_nature",
+                      is_dependent: true,
+                      moq: {
+                        increment_unit: 42,
+                        maximum: 42,
+                        minimum: 42,
+                      },
+                      name: "A name",
+                      net_quantity: {
+                        unit: "kg",
+                        value: 30.7,
+                      },
+                      product_group_tag: ["product_group_tag"],
+                      product_online_date: "product_online_date",
+                      rating: 30.7,
+                      rating_count: 42,
+                      seo: {
+                        title: "title",
+                        description: "A description",
+                        canonical_url: "canonical_url",
+                      },
+                      short_description: "short_description",
+                      similars: ["similars"],
+                      slug: "slug",
+                      tags: ["tags"],
+                      teaser_tag: "teaser_tag",
+                      tryouts: ["tryouts"],
+                      type: "type",
+                      variants: [
+                        {
+                          display_type: "display_type",
+                          group_id: "group_id",
+                          header: "header",
+                          key: "key",
+                          logo: "logo",
+                          total: 42,
+                        },
+                      ],
+                      action: {
+                        type: "type",
+                      },
+                      categories: [
+                        {
+                          _custom_json: {},
+                          custom_config: {},
+                          description: "A description",
+                          name: "A name",
+                          uid: 42,
+                          id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                        },
+                      ],
+                      sellable: true,
+                      identifiers: ["08a16b83-9094-4e89-8c05-2ccadd5c1c7e"],
+                      country_of_origin: "country_of_origin",
+                      no_of_boxes: 42,
+                      promo_meta: {},
+                      is_tryout: true,
+                      channel: "channel",
+                      custom_fields: [
+                        {
+                          id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                          key: "key",
+                          namespace: "namespace",
+                          type: "string_single_line",
+                          values: {},
+                          creator: "application",
+                          custom_object_definition_id:
+                            "custom_object_definition_id",
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/catalog/products/price",
+              summary: "Get product price by slug + size + pincode",
+              desc: "Fetch size-level pricing and availability across different locations and fulfillment options using the product slug and size to ensure accurate, location-based product information.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "slug",
+                  in: "query",
+                  type: "string",
+                  required: true,
+                  desc: "URL-friendly identifier of the product, e.g. 'nike-air-max-270'.",
+                },
+                {
+                  name: "size",
+                  in: "query",
+                  type: "string",
+                  required: true,
+                  desc: "Size variant of the product, e.g. 'S', 'M', 'XL', '42', or '256GB'.",
+                },
+                {
+                  name: "pincode",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Customer's postal/zip code for delivery calculation, e.g. '400001' or '10001'.",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Product price retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    productPrice: {
+                      article_assignment: {
+                        level: "level",
+                        strategy: "strategy",
+                      },
+                      article_id: "article_id",
+                      delivery_promise: {
+                        max: "max",
+                        min: "min",
+                      },
+                      discount: "discount",
+                      discount_meta: {
+                        end: "end",
+                        start: "start",
+                        start_timer_in_minutes: 30.7,
+                        timer: true,
+                      },
+                      grouped_attributes: [
+                        {
+                          title: "title",
+                          id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                        },
+                      ],
+                      is_cod: true,
+                      is_gift: true,
+                      item_type: "item_type",
+                      long_lat: [{}],
+                      marketplace_attributes: [
+                        {
+                          title: "title",
+                          id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                        },
+                      ],
+                      pincode: 42,
+                      postal_code: "postal_code",
+                      price: {
+                        currency_code: "currency_code",
+                        currency_symbol: "currency_symbol",
+                        effective: 30.7,
+                        marked: 30.7,
+                        selling: 30.7,
+                      },
+                      price_per_piece: {
+                        currency_code: "currency_code",
+                        currency_symbol: "currency_symbol",
+                        effective: 30.7,
+                        marked: 30.7,
+                        selling: 30.7,
+                      },
+                      price_per_unit: {
+                        currency_code: "currency_code",
+                        currency_symbol: "currency_symbol",
+                        price: 30.7,
+                        unit: "unit",
+                      },
+                      quantity: 42,
+                      return_config: {
+                        returnable: true,
+                        time: 42,
+                        unit: "unit",
+                      },
+                      seller: {
+                        count: 42,
+                        name: "A name",
+                        uid: 42,
+                      },
+                      seller_count: 42,
+                      set: {
+                        quantity: 42,
+                      },
+                      special_badge: "special_badge",
+                      store: {
+                        uid: 42,
+                        name: "A name",
+                        count: 42,
+                        code: "code",
+                        long_lat: [30.7],
+                      },
+                      strategy_wise_listing: [
+                        {
+                          distance: 42,
+                          pincode: 42,
+                          postal_code: "postal_code",
+                          quantity: 42,
+                          tat: 42,
+                        },
+                      ],
+                      trader: {},
+                      is_serviceable: true,
+                      tags: ["tags"],
+                      _custom_json: {},
+                      total_available_quantity: 42,
+                      inventory_updated_on: "inventory_updated_on",
+                      fulfillment_option: {
+                        name: "A name",
+                        slug: "slug",
+                        type: "type",
+                        is_default: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          id: "addresses",
+          title: "Cart › Addresses",
+          icon: "📍",
+          desc: "Cart address management — list, get, add, update and select.",
+          businessOverview:
+            "Address management is a critical step in the checkout funnel. It allows customers to save their delivery preferences, reducing friction for future purchases. Accurate address data—including pincodes and geolocation—is essential for calculating precise delivery estimates (ETAs), shipping costs, and serviceability checks.",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/cart/addresses",
+              summary: "Get all addresses",
+              businessContext: "Displays the customer's 'Address Book'. Allowing users to select from previously saved addresses significantly increases checkout speed and conversion rates.",
+              desc: "List all addresses saved by the customer, simplifying the checkout process by offering pre-saved address options for delivery.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "x-cookie",
+                  in: "header",
+                  type: "string",
+                  required: false,
+                  desc: "Session cookie obtained from registration/login (format: f.session=<cookie_value>)",
+                },
+                {
+                  name: "buyNow",
+                  in: "query",
+                  type: "boolean",
+                  required: false,
+                  desc: "Filter for buy-now flow",
+                },
+                {
+                  name: "cartId",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Associated cart ID",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Addresses retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    addresses: {
+                      address: [
+                        {
+                          custom_json: {},
+                          address: "2832 Sesame Street",
+                          address_type: "address_type",
+                          area: "area",
+                          area_code: "area_code",
+                          area_code_slug: "area_code_slug",
+                          checkout_mode: "checkout_mode",
+                          app_id: "app_id",
+                          city: "Montreal",
+                          country: "Canada",
+                          country_code: "country_code",
+                          country_iso_code: "country_iso_code",
+                          country_phone_code: "country_phone_code",
+                          created_by_user_id: "created_by_user_id",
+                          email: "test-email@yourcompany.com",
+                          google_map_point: {},
+                          id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                          is_active: true,
+                          is_default_address: true,
+                          landmark: "landmark",
+                          meta: {},
+                          name: "A name",
+                          phone: "1+ 418-323-4236",
+                          state: "Quebec",
+                          tags: ["tags"],
+                          uid: 42,
+                          user_id: "user_id",
+                          sector: "sector",
+                          state_code: "state_code",
+                          is_anonymous: true,
+                        },
+                      ],
+                      pii_masking: true,
+                      validation_config: {
+                        address_max_limit: 30.7,
+                        user_address_count: 42,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "POST",
+              path: "/api/cart/addresses",
+              summary: "Add a new address",
+              businessContext: "Captures a new delivery or billing location. Validating the warehouse closeness and regional serviceability at this stage prevents later order cancellations.",
+              desc: "Add a new address to save details such as name, email, contact information, and address.",
+              auth: "Bearer JWT",
+              bodyFields: [
+                {
+                  name: "_custom_json",
+                  type: "JSON",
+                  required: false,
+                  desc: "Custom JSON for address. Example: { instructions: 'Leave at the gate' }",
+                },
+                {
+                  name: "address",
+                  type: "string",
+                  required: true,
+                  desc: "Address line(s). Example: '221B Baker Street'",
+                },
+                {
+                  name: "address_type",
+                  type: "string",
+                  required: true,
+                  desc: "Type of address. Example: 'home'",
+                },
+                {
+                  name: "area",
+                  type: "string",
+                  required: false,
+                  desc: "Area/locality. Example: 'Andheri East'",
+                },
+                {
+                  name: "area_code",
+                  type: "string",
+                  required: true,
+                  desc: "Area code. Example: '400059'",
+                },
+                {
+                  name: "area_code_slug",
+                  type: "string",
+                  required: true,
+                  desc: "Area code slug (e.g., pincode in India). Example: 'pincode'",
+                },
+                {
+                  name: "checkout_mode",
+                  type: "string",
+                  required: false,
+                  desc: "Checkout mode associated with this address (e.g., 'self', 'other'). Example: 'self'",
+                },
+                {
+                  name: "city",
+                  type: "string",
+                  required: true,
+                  desc: "City of the address. Example: 'Mumbai'",
+                },
+                {
+                  name: "country",
+                  type: "string",
+                  required: true,
+                  desc: "Country of the address. Example: 'India'",
+                },
+                {
+                  name: "country_code",
+                  type: "string",
+                  required: true,
+                  desc: "Country phone code (e.g., '+91'). Example: '+91'",
+                },
+                {
+                  name: "country_iso_code",
+                  type: "string",
+                  required: true,
+                  desc: "Country ISO code (e.g., IN). Example: 'IN'",
+                },
+                {
+                  name: "country_phone_code",
+                  type: "string",
+                  required: true,
+                  desc: "Country phone code (e.g., '+91'). Example: '+91'",
+                },
+                {
+                  name: "email",
+                  type: "string",
+                  required: false,
+                  desc: "Email address. Example: 'john.doe@example.com'",
+                },
+                {
+                  name: "geo_location",
+                  type: "object",
+                  required: false,
+                  desc: "Geolocation coordinates. Example: { latitude: 19.076, longitude: 72.8777 }",
+                },
+                {
+                  name: "google_map_point",
+                  type: "JSON",
+                  required: false,
+                  desc: "Google Maps geometry point. Example: { type: 'Point', coordinates: [72.8777, 19.076] }",
+                },
+                {
+                  name: "is_active",
+                  type: "boolean",
+                  required: false,
+                  desc: "Whether the address is active. Example: true",
+                },
+                {
+                  name: "is_default_address",
+                  type: "boolean",
+                  required: false,
+                  desc: "Whether this is the default address. Example: false",
+                },
+                {
+                  name: "landmark",
+                  type: "string",
+                  required: false,
+                  desc: "Landmark. Example: 'Near City Mall'",
+                },
+                {
+                  name: "meta",
+                  type: "JSON",
+                  required: false,
+                  desc: "Additional metadata. Example: { floor: '2nd' }",
+                },
+                {
+                  name: "name",
+                  type: "string",
+                  required: true,
+                  desc: "Full name. Example: 'John Doe'",
+                },
+                {
+                  name: "phone",
+                  type: "string",
+                  required: true,
+                  desc: "Phone number. Example: '9876543210'",
+                },
+                {
+                  name: "pincode",
+                  type: "string",
+                  required: true,
+                  desc: "Postal code or PIN code of the address area.",
+                },
+                {
+                  name: "sector",
+                  type: "string",
+                  required: false,
+                  desc: "Sector/Block. Example: 'Sector 21'",
+                },
+                {
+                  name: "state",
+                  type: "string",
+                  required: true,
+                  desc: "State. Example: 'Maharashtra'",
+                },
+                {
+                  name: "state_code",
+                  type: "string",
+                  required: false,
+                  desc: "State code. Example: 'MH'",
+                },
+                {
+                  name: "tags",
+                  type: "[string]",
+                  required: false,
+                  desc: "Tags to identify the address. Example: ['home', 'default']",
+                },
+                {
+                  name: "user_id",
+                  type: "string",
+                  required: false,
+                  desc: "User ID the address belongs to. Example: 'usr_123'",
+                },
+              ],
+              body: {
+                address: "221B Baker Street",
+                address_type: "home",
+                area: "Andheri East",
+                area_code: "400059",
+                area_code_slug: "pincode",
+                checkout_mode: "self",
+                city: "Mumbai",
+                country: "India",
+                country_code: "+91",
+                country_iso_code: "IN",
+                country_phone_code: "+91",
+                email: "john.doe@example.com",
+                geo_location: { latitude: 19.076, longitude: 72.8777 },
+                is_active: true,
+                is_default_address: true,
+                landmark: "Near City Mall",
+                meta: { floor: "2nd" },
+                name: "John Doe",
+                phone: "9876543210",
+                pincode: "400001",
+                sector: "Sector 21",
+                state: "Maharashtra",
+                state_code: "MH",
+                tags: ["home", "default"],
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Address added successfully",
+                  statusCode: 200,
+                  data: {
+                    addAddress: {
+                      id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                      is_default_address: true,
+                      success: true,
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "POST",
+              path: "/api/cart/addresses/selectAddress",
+              summary: "Select address for cart",
+              businessContext: "The most important state transition in the checkout flow. Selecting an address locks in the shipping costs and provides the customer with a definitive 'Delivery Promise' date.",
+              desc: "Select an address from the saved customer addresses and validates the availability of items in the cart. Additionally, it verifies and updates the delivery promise based on the selected address.",
+              auth: "Bearer JWT",
+              bodyFields: [
+                {
+                  name: "includePriceBreakup",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to retrieve the price breakup of cart items. Example: true",
+                },
+                {
+                  name: "includeAllItems",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to retrieve all items added in the cart. Example: true",
+                },
+                {
+                  name: "billing_address_id",
+                  type: "string",
+                  required: true,
+                  desc: "ID of the billing address to be selected.",
+                },
+                {
+                  name: "delivery_address_id",
+                  type: "string",
+                  required: true,
+                  desc: "ID of the delivery address to be selected.",
+                },
+                {
+                  name: "cartId",
+                  type: "string",
+                  required: true,
+                  desc: "Unique identifier for the cart.",
+                },
+                {
+                  name: "buyNow",
+                  type: "boolean",
+                  required: true,
+                  desc: "Flag to indicate if this is for a buy now order.",
+                },
+              ],
+              body: {
+                billing_address_id: "addr_123",
+                delivery_address_id: "addr_456",
+                cartId: "c_abc123",
+                buyNow: false,
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Address selected successfully",
+                  statusCode: 200,
+                  data: {
+                    selectAddress: {
+                      applied_promo_details: [
+                        {
+                          amount: 30.7,
+                          article_quantity: 42,
+                          code: "code",
+                          meta: {},
+                          mrp_promotion: true,
+                          offer_text: "offer_text",
+                          offer_label: "offer_label",
+                          promo_id: "promo_id",
+                          promotion_group: "promotion_group",
+                          promotion_name: "promotion_name",
+                          promotion_type: "promotion_type",
+                          cancellation_allowed: true,
+                        },
+                      ],
+                      buy_now: true,
+                      cart_id: 42,
+                      checkout_mode: "checkout_mode",
+                      comment: "comment",
+                      coupon: {
+                        cashback_amount: 30.7,
+                        cashback_message_primary: "cashback_message_primary",
+                        cashback_message_secondary:
+                          "cashback_message_secondary",
+                        coupon_code: "coupon_code",
+                        coupon_description: "coupon_description",
+                        coupon_id: "coupon_id",
+                        coupon_subtitle: "coupon_subtitle",
+                        coupon_title: "coupon_title",
+                        coupon_type: "coupon_type",
+                        coupon_value: 30.7,
+                        discount: 30.7,
+                        is_applied: true,
+                        is_valid: true,
+                        maximum_discount_value: 30.7,
+                        message: "message",
+                        minimum_cart_value: 30.7,
+                      },
+                      coupon_text: "coupon_text",
+                      currency: {
+                        code: "code",
+                        symbol: "symbol",
+                      },
+                      delivery_charge_info: "delivery_charge_info",
+                      gstin: "gstin",
+                      id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                      is_valid: true,
+                      items: [
+                        {
+                          coupon_message: "coupon_message",
+                          custom_order: {},
+                          discount: "discount",
+                          is_set: true,
+                          key: "key",
+                          message: "message",
+                          moq: {},
+                          parent_item_identifiers: {},
+                          product_ean_id: "product_ean_id",
+                          quantity: 42,
+                          bulk_offer: {},
+                          item_type: "virtual_bundle",
+                        },
+                      ],
+                      last_modified: "last_modified",
+                      message: "message",
+                      notification: {},
+                      pan_config: {},
+                      pan_no: "pan_no",
+                      payment_selection_lock: {
+                        default_options: "default_options",
+                        enabled: true,
+                        payment_identifier: "payment_identifier",
+                      },
+                      restrict_checkout: true,
+                      addresses: {
+                        pii_masking: true,
+                      },
+                      user_cart_items_count: 42,
+                      staff_user_id: "staff_user_id",
+                      uid: "uid",
+                      success: true,
+                      custom_cart_meta: {},
+                      alternate_pickup_person: {
+                        enabled: true,
+                        name: "A name",
+                        email: "test-email@yourcompany.com",
+                        phone: "1+ 418-323-4236",
+                        country_phone_code: "country_phone_code",
+                      },
+                      free_gift_selection_available: true,
+                      customer_id: "customer_id",
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/cart/addresses/{id}",
+              summary: "Get address by ID",
+              businessContext: "Useful for pre-filling the 'Edit Address' form on the frontend. Ensuring customers can view and refine their saved details maintain data accuracy.",
+              desc: "Get a specific customer address stored in the system by providing its unique identifier. This API provides detailed information about the address, including the recipient's name, address, city, postal code, and other relevant details.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "id",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Address ID",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Address retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    address: {
+                      custom_json: {},
+                      address: "2832 Sesame Street",
+                      address_type: "address_type",
+                      area: "area",
+                      area_code: "area_code",
+                      area_code_slug: "area_code_slug",
+                      checkout_mode: "checkout_mode",
+                      app_id: "app_id",
+                      city: "Montreal",
+                      country: "Canada",
+                      country_code: "country_code",
+                      country_iso_code: "country_iso_code",
+                      country_phone_code: "country_phone_code",
+                      created_by_user_id: "created_by_user_id",
+                      email: "test-email@yourcompany.com",
+                      geo_location: {
+                        latitude: 30.7,
+                        longitude: 30.7,
+                      },
+                      google_map_point: {},
+                      id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                      is_active: true,
+                      is_default_address: true,
+                      landmark: "landmark",
+                      meta: {},
+                      name: "A name",
+                      phone: "1+ 418-323-4236",
+                      state: "Quebec",
+                      tags: ["tags"],
+                      uid: 42,
+                      user_id: "user_id",
+                      sector: "sector",
+                      state_code: "state_code",
+                      is_anonymous: true,
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "PUT",
+              path: "/api/cart/addresses/{id}",
+              summary: "Update an address",
+              businessContext: "Facilitates seamless updates to customer locations. For example, correcting a typo in the street name or changing the 'Home/Office' tag.",
+              desc: "Updates an existing address by its ID.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "id",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Address ID",
+                },
+              ],
+              bodyFields: [
+                {
+                  name: "_custom_json",
+                  type: "JSON",
+                  required: false,
+                  desc: "Custom JSON for address. Example: { instructions: 'Leave at the gate' }",
+                },
+                {
+                  name: "address",
+                  type: "string",
+                  required: true,
+                  desc: "Address line(s). Example: '221B Baker Street'",
+                },
+                {
+                  name: "address_type",
+                  type: "string",
+                  required: true,
+                  desc: "Type of address. Example: 'home'",
+                },
+                {
+                  name: "area",
+                  type: "string",
+                  required: false,
+                  desc: "Area/locality. Example: 'Andheri East'",
+                },
+                {
+                  name: "area_code",
+                  type: "string",
+                  required: true,
+                  desc: "Area code. Example: '400059'",
+                },
+                {
+                  name: "area_code_slug",
+                  type: "string",
+                  required: true,
+                  desc: "Area code slug (e.g., pincode in India). Example: 'pincode'",
+                },
+                {
+                  name: "checkout_mode",
+                  type: "string",
+                  required: false,
+                  desc: "Checkout mode associated with this address (e.g., 'self', 'other'). Example: 'self'",
+                },
+                {
+                  name: "city",
+                  type: "string",
+                  required: true,
+                  desc: "City of the address. Example: 'Mumbai'",
+                },
+                {
+                  name: "country",
+                  type: "string",
+                  required: true,
+                  desc: "Country of the address. Example: 'India'",
+                },
+                {
+                  name: "country_code",
+                  type: "string",
+                  required: true,
+                  desc: "Country phone code (e.g., '+91'). Example: '+91'",
+                },
+                {
+                  name: "country_iso_code",
+                  type: "string",
+                  required: true,
+                  desc: "Country ISO code (e.g., IN). Example: 'IN'",
+                },
+                {
+                  name: "country_phone_code",
+                  type: "string",
+                  required: true,
+                  desc: "Country phone code (e.g., '+91'). Example: '+91'",
+                },
+                {
+                  name: "email",
+                  type: "string",
+                  required: false,
+                  desc: "Email address. Example: 'john.doe@example.com'",
+                },
+                {
+                  name: "geo_location",
+                  type: "object",
+                  required: false,
+                  desc: "Geolocation coordinates. Example: { latitude: 19.076, longitude: 72.8777 }",
+                },
+                {
+                  name: "google_map_point",
+                  type: "JSON",
+                  required: false,
+                  desc: "Google Maps geometry point. Example: { type: 'Point', coordinates: [72.8777, 19.076] }",
+                },
+                {
+                  name: "is_active",
+                  type: "boolean",
+                  required: false,
+                  desc: "Whether the address is active. Example: true",
+                },
+                {
+                  name: "is_default_address",
+                  type: "boolean",
+                  required: false,
+                  desc: "Whether this is the default address. Example: false",
+                },
+                {
+                  name: "landmark",
+                  type: "string",
+                  required: false,
+                  desc: "Landmark. Example: 'Near City Mall'",
+                },
+                {
+                  name: "meta",
+                  type: "JSON",
+                  required: false,
+                  desc: "Additional metadata. Example: { floor: '2nd' }",
+                },
+                {
+                  name: "name",
+                  type: "string",
+                  required: true,
+                  desc: "Full name. Example: 'John Doe'",
+                },
+                {
+                  name: "phone",
+                  type: "string",
+                  required: true,
+                  desc: "Phone number. Example: '9876543210'",
+                },
+                {
+                  name: "pincode",
+                  type: "string",
+                  required: true,
+                  desc: "Postal code or PIN code of the address area.",
+                },
+                {
+                  name: "sector",
+                  type: "string",
+                  required: false,
+                  desc: "Sector/Block. Example: 'Sector 21'",
+                },
+                {
+                  name: "state",
+                  type: "string",
+                  required: true,
+                  desc: "State. Example: 'Maharashtra'",
+                },
+                {
+                  name: "state_code",
+                  type: "string",
+                  required: false,
+                  desc: "State code. Example: 'MH'",
+                },
+                {
+                  name: "tags",
+                  type: "[string]",
+                  required: false,
+                  desc: "Tags to identify the address. Example: ['home', 'default']",
+                },
+                {
+                  name: "user_id",
+                  type: "string",
+                  required: false,
+                  desc: "User ID the address belongs to. Example: 'usr_123'",
+                },
+              ],
+              body: {
+                address: "221B Baker Street",
+                address_type: "home",
+                area: "Andheri East",
+                area_code: "400059",
+                area_code_slug: "pincode",
+                checkout_mode: "self",
+                city: "Mumbai",
+                country: "India",
+                country_code: "+91",
+                country_iso_code: "IN",
+                country_phone_code: "+91",
+                email: "john.doe@example.com",
+                geo_location: { latitude: 19.076, longitude: 72.8777 },
+                is_active: true,
+                is_default_address: true,
+                landmark: "Near City Mall",
+                meta: { floor: "2nd" },
+                name: "John Doe",
+                phone: "9876543210",
+                pincode: "400001",
+                sector: "Sector 21",
+                state: "Maharashtra",
+                state_code: "MH",
+                tags: ["home", "default"],
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Address updated successfully",
+                  statusCode: 200,
+                  data: {
+                    updateAddress: {
+                      id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                      is_default_address: true,
+                      success: true,
+                      is_updated: true,
+                      address_id: 42,
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          id: "cart",
+          title: "Cart",
+          icon: "🛒",
+          desc: "Cart CRUD — create, get, update, delete, checkout.",
+          businessOverview:
+            "The shopping cart is the bridge between product interest and purchase. This section manages the temporary collection of items a customer intends to buy. It handles quantity updates, coupon applications, and real-time price calculations (discounts, taxes, and shipping). A high-performing cart API is essential for minimizing abandonment.",
+          endpoints: [
+            {
+              method: "POST",
+              path: "/api/cart",
+              summary: "Create / add items to cart",
+              businessContext: "The 'Add to Cart' action. It initializes a shopping session or adds new items to an existing one. It also triggers preliminary price and inventory checks.",
+              desc: "Add to cart request schema which has items data to be added in cart.",
+              auth: "Bearer JWT",
+              bodyFields: [
+                {
+                  name: "id",
+                  type: "string",
+                  required: false,
+                  desc: "The unique identifier of the cart. Example: '5bb521cfdc83215e1889b346'",
+                },
+                {
+                  name: "areaCode",
+                  type: "string",
+                  required: false,
+                  desc: "Customer serviceable area code, such as a pincode, ZIP code, or postal code. Example: '400059'",
+                },
+                {
+                  name: "includeBreakup",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to retrieve the price breakup of cart items. Example: true",
+                },
+                {
+                  name: "buyNow",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to initialize a Buy Now cart. Example: false",
+                },
+                {
+                  name: "includeAllItems",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to retrieve all items added to the cart. Example: true",
+                },
+                {
+                  name: "addCartRequestInput",
+                  type: "object",
+                  required: true,
+                  desc: "Specify item details — contains an <code>items</code> array of CartItem objects.",
+                },
+                {
+                  name: "addCartRequestInput.items",
+                  type: "[CartItem]",
+                  required: true,
+                  desc: "List of items to add to the cart (with item id, size, quantity, etc.).",
+                },
+                {
+                  name: "items[].item_id",
+                  type: "integer",
+                  required: true,
+                  desc: "Product identifier. Example: 987654",
+                },
+                {
+                  name: "items[].item_size",
+                  type: "string",
+                  required: true,
+                  desc: "Size of the product. Example: 'M'",
+                },
+                {
+                  name: "items[].quantity",
+                  type: "integer",
+                  required: true,
+                  desc: "Quantity to add. Example: 2",
+                },
+                {
+                  name: "items[].seller_id",
+                  type: "integer",
+                  required: false,
+                  desc: "Selected seller ID. Example: 5678",
+                },
+                {
+                  name: "items[].store_id",
+                  type: "integer",
+                  required: false,
+                  desc: "Selected store ID. Example: 1234",
+                },
+                {
+                  name: "items[]._custom_json",
+                  type: "JSON",
+                  required: false,
+                  desc: "Custom JSON at article level. Example: { gift_wrap: true }",
+                },
+                {
+                  name: "items[].article_assignment",
+                  type: "object",
+                  required: false,
+                  desc: "Article assignment rules — <code>level</code> (e.g. 'item') and <code>strategy</code> (e.g. 'fast-delivery', 'optimal', 'low-price', 'manual').",
+                },
+                {
+                  name: "items[].meta",
+                  type: "JSON",
+                  required: false,
+                  desc: "Metadata at article level. Example: { source: 'PDP' }",
+                },
+              ],
+              body: {
+                id: "5bb521cfdc83215e1889b346",
+                areaCode: "400059",
+                includeBreakup: true,
+                buyNow: false,
+                includeAllItems: true,
+                addCartRequestInput: {
+                  items: [
+                    {
+                      item_id: 987654,
+                      item_size: "M",
+                      quantity: 2,
+                      seller_id: 5678,
+                      store_id: 1234,
+                      _custom_json: { gift_wrap: true },
+                      article_assignment: {
+                        level: "multi-companies",
+                        strategy: "optimal",
+                      },
+                      meta: { source: "PDP" },
+                    },
+                  ],
+                },
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Cart created successfully",
+                  statusCode: 200,
+                  data: {
+                    addItemsToCart: {
+                      cart: {
+                        buy_now: true,
+                        cart_id: 42,
+                        checkout_mode: "checkout_mode",
+                        comment: "comment",
+                        coupon_text: "coupon_text",
+                        delivery_charge_info: "delivery_charge_info",
+                        gstin: "gstin",
+                        id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                        is_valid: true,
+                        last_modified: "last_modified",
+                        message: "message",
+                        notification: {},
+                        pan_config: {},
+                        pan_no: "pan_no",
+                        restrict_checkout: true,
+                        user_cart_items_count: 42,
+                        staff_user_id: "staff_user_id",
+                        uid: "uid",
+                        success: true,
+                        custom_cart_meta: {},
+                        free_gift_selection_available: true,
+                        customer_id: "customer_id",
+                      },
+                      message: "message",
+                      partial: true,
+                      success: true,
+                      result: {},
+                      items: [
+                        {
+                          item_id: 42,
+                          size: "Large",
+                          store_id: 42,
+                          success: true,
+                          message: "message",
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/cart",
+              summary: "Get cart details",
+              desc: "Get details of a cart linked to a specific customer using a unique cart ID. It offers an overview of the items, quantities, prices, and other relevant information associated with the cart.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "id",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "The unique identifier of the cart. Example: '5bb521cfdc83215e1889b346'",
+                },
+                {
+                  name: "areaCode",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Customer serviceable area code, such as a pincode, ZIP code, or postal code. Example: '400059'",
+                },
+                {
+                  name: "buyNow",
+                  in: "query",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to initialize a Buy Now cart. Example: false",
+                },
+                {
+                  name: "includeBreakup",
+                  in: "query",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to retrieve the price breakup of cart items. Example: true",
+                },
+                {
+                  name: "includeAllItems",
+                  in: "query",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to retrieve all items added in the cart. Example: true",
+                },
+                {
+                  name: "includeCodCharges",
+                  in: "query",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to include COD charges in breakup. Example: false",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Cart retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    cart: {
+                      applied_promo_details: [
+                        {
+                          amount: 30.7,
+                          article_quantity: 42,
+                          code: "code",
+                          meta: {},
+                          mrp_promotion: true,
+                          offer_text: "offer_text",
+                          offer_label: "offer_label",
+                          promo_id: "promo_id",
+                          promotion_group: "promotion_group",
+                          promotion_name: "promotion_name",
+                          promotion_type: "promotion_type",
+                          cancellation_allowed: true,
+                        },
+                      ],
+                      buy_now: true,
+                      cart_id: 42,
+                      checkout_mode: "checkout_mode",
+                      comment: "comment",
+                      coupon: {
+                        cashback_amount: 30.7,
+                        cashback_message_primary: "cashback_message_primary",
+                        cashback_message_secondary:
+                          "cashback_message_secondary",
+                        coupon_code: "coupon_code",
+                        coupon_description: "coupon_description",
+                        coupon_id: "coupon_id",
+                        coupon_subtitle: "coupon_subtitle",
+                        coupon_title: "coupon_title",
+                        coupon_type: "coupon_type",
+                        coupon_value: 30.7,
+                        discount: 30.7,
+                        is_applied: true,
+                        is_valid: true,
+                        maximum_discount_value: 30.7,
+                        message: "message",
+                        minimum_cart_value: 30.7,
+                      },
+                      coupon_text: "coupon_text",
+                      currency: {
+                        code: "code",
+                        symbol: "symbol",
+                      },
+                      delivery_charge_info: "delivery_charge_info",
+                      gstin: "gstin",
+                      id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                      is_valid: true,
+                      items: [
+                        {
+                          coupon_message: "coupon_message",
+                          custom_order: {},
+                          discount: "discount",
+                          is_set: true,
+                          key: "key",
+                          message: "message",
+                          moq: {},
+                          parent_item_identifiers: {},
+                          product_ean_id: "product_ean_id",
+                          quantity: 42,
+                          bulk_offer: {},
+                          item_type: "virtual_bundle",
+                        },
+                      ],
+                      last_modified: "last_modified",
+                      message: "message",
+                      notification: {},
+                      pan_config: {},
+                      pan_no: "pan_no",
+                      payment_selection_lock: {
+                        default_options: "default_options",
+                        enabled: true,
+                        payment_identifier: "payment_identifier",
+                      },
+                      restrict_checkout: true,
+                      addresses: {
+                        pii_masking: true,
+                      },
+                      user_cart_items_count: 42,
+                      staff_user_id: "staff_user_id",
+                      uid: "uid",
+                      success: true,
+                      custom_cart_meta: {},
+                      alternate_pickup_person: {
+                        enabled: true,
+                        name: "A name",
+                        email: "test-email@yourcompany.com",
+                        phone: "1+ 418-323-4236",
+                        country_phone_code: "country_phone_code",
+                      },
+                      free_gift_selection_available: true,
+                      customer_id: "customer_id",
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "PUT",
+              path: "/api/cart",
+              summary: "Update cart items",
+              desc: "Update cart. Customers can modify added product attributes such as quantity and size, as well as remove items from the cart.",
+              auth: "Bearer JWT",
+              bodyFields: [
+                {
+                  name: "includePriceBreakup",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to retrieve the price breakup of cart items. Example: true",
+                },
+                {
+                  name: "buyNow",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to initialize a Buy Now cart. Example: false",
+                },
+                {
+                  name: "includeAllItems",
+                  type: "boolean",
+                  required: false,
+                  desc: "Select true to retrieve all items added in the cart. Example: true",
+                },
+                {
+                  name: "id",
+                  type: "string",
+                  required: false,
+                  desc: "The unique identifier of the cart. Example: '5bb521cfdc83215e1889b346'",
+                },
+                {
+                  name: "updateCartRequestInput",
+                  type: "object",
+                  required: true,
+                  desc: "Data to update cart items and the operation to perform.",
+                },
+                {
+                  name: "updateCartRequestInput.operation",
+                  type: "string",
+                  required: true,
+                  desc: "Operation on items — <code>update_item</code> or <code>remove_item</code>.",
+                },
+                {
+                  name: "updateCartRequestInput.items",
+                  type: "[UpdateProductCartInput]",
+                  required: true,
+                  desc: "List of items to update.",
+                },
+                {
+                  name: "items[].identifiers",
+                  type: "object",
+                  required: true,
+                  desc: "Cart-generated item identifier. Contains <code>identifier</code> string. Example: { identifier: 'line_abc123' }",
+                },
+                {
+                  name: "items[].item_id",
+                  type: "integer",
+                  required: false,
+                  desc: "Product item ID. Example: 987654",
+                },
+                {
+                  name: "items[].item_index",
+                  type: "integer",
+                  required: false,
+                  desc: "Index of the item line to update. Example: 0",
+                },
+                {
+                  name: "items[].item_size",
+                  type: "string",
+                  required: false,
+                  desc: "Size of the product. Example: 'M'",
+                },
+                {
+                  name: "items[].quantity",
+                  type: "integer",
+                  required: false,
+                  desc: "Quantity to set. Example: 3",
+                },
+                {
+                  name: "items[].article_id",
+                  type: "string",
+                  required: false,
+                  desc: "Article ID of the item. Example: '5fdc737e3c05146138192f79'",
+                },
+                {
+                  name: "items[]._custom_json",
+                  type: "JSON",
+                  required: false,
+                  desc: "Custom JSON at line-item level. Example: { gift_wrap: true }",
+                },
+                {
+                  name: "items[].extra_meta",
+                  type: "JSON",
+                  required: false,
+                  desc: "Extra metadata. Example: { color: 'Red' }",
+                },
+                {
+                  name: "items[].meta",
+                  type: "JSON",
+                  required: false,
+                  desc: "Line-item metadata. Example: { source: 'cart-page' }",
+                },
+              ],
+              body: {
+                includePriceBreakup: true,
+                buyNow: false,
+                includeAllItems: true,
+                id: "5bb521cfdc83215e1889b346",
+                updateCartRequestInput: {
+                  operation: "update_item",
+                  items: [
+                    {
+                      identifiers: { identifier: "line_abc123" },
+                      item_id: 987654,
+                      item_size: "L",
+                      quantity: 3,
+                      article_id: "5fdc737e3c05146138192f79",
+                      _custom_json: { gift_wrap: true },
+                      meta: { source: "cart-page" },
+                    },
+                  ],
+                },
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Cart updated successfully",
+                  statusCode: 200,
+                  data: {
+                    updateCart: {
+                      cart: {
+                        buy_now: true,
+                        cart_id: 42,
+                        checkout_mode: "checkout_mode",
+                        comment: "comment",
+                        coupon_text: "coupon_text",
+                        delivery_charge_info: "delivery_charge_info",
+                        gstin: "gstin",
+                        id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                        is_valid: true,
+                        last_modified: "last_modified",
+                        message: "message",
+                        notification: {},
+                        pan_config: {},
+                        pan_no: "pan_no",
+                        restrict_checkout: true,
+                        user_cart_items_count: 42,
+                        staff_user_id: "staff_user_id",
+                        uid: "uid",
+                        success: true,
+                        custom_cart_meta: {},
+                        free_gift_selection_available: true,
+                        customer_id: "customer_id",
+                      },
+                      message: "message",
+                      success: true,
+                      result: {},
+                      items: [
+                        {
+                          item_id: 42,
+                          size: "Large",
+                          store_id: 42,
+                          success: true,
+                          message: "message",
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "DELETE",
+              path: "/api/cart/{id}",
+              summary: "Delete a cart",
+              desc: "Delete all items from the user's cart and resets it to its initial state, providing a clean slate for new selections.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "id",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "The unique identifier of the cart. Example: '5bb521cfdc83215e1889b346'",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Cart deleted successfully",
+                  statusCode: 200,
+                  data: {
+                    deleteCart: {
+                      message: "message",
+                      success: true,
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "POST",
+              path: "/api/cart/checkout",
+              summary: "Checkout cart",
+              desc: "Initiate the checkout process for a cart. This internally fetches available payment modes, selects a non-COD payment option, places the order, and returns a payment redirect URL for the customer to complete the transaction.",
+              auth: "Bearer JWT",
+              bodyFields: [
+                {
+                  name: "amount",
+                  type: "number",
+                  required: true,
+                  desc: "Total cart amount to be charged. Used to fetch applicable payment mode routes. Example: 12999",
+                },
+                {
+                  name: "cartId",
+                  type: "string",
+                  required: true,
+                  desc: "The unique identifier of the cart to checkout. Example: '5bb521cfdc83215e1889b346'",
+                },
+                {
+                  name: "pincode",
+                  type: "string",
+                  required: true,
+                  desc: "Customer's delivery pincode. Used for payment mode route validation. Example: '400001'",
+                },
+                {
+                  name: "address_id",
+                  type: "string",
+                  required: true,
+                  desc: "ID of the delivery address selected for the order. Example: 'addr_001'",
+                },
+                {
+                  name: "billing_address_id",
+                  type: "string",
+                  required: true,
+                  desc: "ID of the billing address. Can be the same as delivery address. Example: 'addr_001'",
+                },
+                {
+                  name: "failure_callback_url",
+                  type: "string",
+                  required: true,
+                  desc: "URL to redirect the customer to on payment failure. A <code>?failed=true</code> query param is appended automatically. Example: 'https://example.com/payment/failure'",
+                },
+                {
+                  name: "success_callback_url",
+                  type: "string",
+                  required: true,
+                  desc: "URL to redirect the customer to on successful payment. A <code>?success=true</code> query param is appended automatically. Example: 'https://example.com/payment/success'",
+                },
+                {
+                  name: "buyNow",
+                  type: "boolean",
+                  required: true,
+                  desc: "Whether this checkout is for a Buy Now cart. Example: false",
+                },
+              ],
+              body: {
+                amount: 12999,
+                cartId: "5bb521cfdc83215e1889b346",
+                pincode: "400001",
+                address_id: "addr_001",
+                billing_address_id: "addr_001",
+                failure_callback_url: "https://example.com/payment/failure",
+                success_callback_url: "https://example.com/payment/success",
+                buyNow: false,
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Checkout initiated successfully",
+                  statusCode: 200,
+                  data: {
+                    redirectUrl:
+                      "https://payment-gateway.com/pay?session=abc123",
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/cart/shipment",
+              summary: "Get cart shipment details",
+              desc: "Get shipment details for the items in a cart, specific to the selected address. Shipment details include delivery promises, seller information, item details, and other relevant information.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "id",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "The unique identifier of the cart. Example: '5bb521cfdc83215e1889b346'",
+                },
+                {
+                  name: "addressId",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "The unique identifier of the address. Example: 'addr_001'",
+                },
+                {
+                  name: "buyNow",
+                  in: "query",
+                  type: "boolean",
+                  required: false,
+                  desc: "Whether to get a Buy Now cart. Example: false",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Cart shipment details retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    cartShipmentDetails: {
+                      buy_now: true,
+                      cart_id: 42,
+                      checkout_mode: "checkout_mode",
+                      comment: "comment",
+                      coupon_text: "coupon_text",
+                      currency: {
+                        code: "code",
+                        symbol: "symbol",
+                      },
+                      delivery_charge_info: "delivery_charge_info",
+                      error: true,
+                      gstin: "gstin",
+                      id: "08a16b83-9094-4e89-8c05-2ccadd5c1c7e",
+                      is_valid: true,
+                      last_modified: "last_modified",
+                      message: "message",
+                      payment_selection_lock: {
+                        default_options: "default_options",
+                        enabled: true,
+                        payment_identifier: "payment_identifier",
+                      },
+                      restrict_checkout: true,
+                      shipments: [
+                        {
+                          box_type: "box_type",
+                          dp_id: "dp_id",
+                          dp_options: {},
+                          fulfillment_id: 42,
+                          fulfillment_type: "fulfillment_type",
+                          order_type: "HomeDelivery",
+                          shipment_type: "shipment_type",
+                          shipments: 42,
+                        },
+                      ],
+                      uid: "uid",
+                      custom_cart_meta: {},
+                      customer_id: "customer_id",
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          id: "shipments",
+          title: "Shipments",
+          icon: "🚚",
+          desc: "Shipment lookup and tracking",
+          businessOverview:
+            "Once an order is placed, it is fulfilled as one or more 'Shipments'. This section allows customers to track their package's journey from the warehouse to their doorstep. It providing real-time status updates, delivery estimates (ETAs), and digital invoices.",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/shipments/{shipmentId}",
+              summary: "Get shipment by ID",
+              businessContext: "Powers the 'Track My Order' page. It provides the AWB (Air Waybill) number, courier partner details, and current status (e.g., Shipped, Out for Delivery).",
+              desc: "Get shipment details such as price breakup, tracking details, store information, etc. using Shipment ID. For example, shipmentId: '16736576489251696245'.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "shipmentId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Unique shipment identifier",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Shipment retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    shipment: {
+                      detail: {
+                        awb_no: "awb_no",
+                        beneficiary_details: true,
+                        can_break: {},
+                        can_cancel: true,
+                        can_return: true,
+                        comment: "comment",
+                        custom_meta: [{}],
+                        delivery_date: "delivery_date",
+                        dp_name: "dp_name",
+                        need_help_url: "need_help_url",
+                        order_id: "order_id",
+                        order_type: "HomeDelivery",
+                        refund_details: {},
+                        return_meta: {},
+                        returnable_date: "returnable_date",
+                        shipment_created_at: "shipment_created_at",
+                        shipment_id: "shipment_id",
+                        affiliate_shipment_id: "affiliate_shipment_id",
+                        show_download_invoice: true,
+                        show_track_link: true,
+                        size_info: {},
+                        total_bags: 42,
+                        track_url: "track_url",
+                        traking_no: "traking_no",
+                        gstin_code: "gstin_code",
+                        shipment_created_ts: "shipment_created_ts",
+                        is_refund_config_enabled: true,
+                        meta: {},
+                      },
+                      shipment_bag_reasons: {
+                        success: true,
+                      },
+                      customer_detail: {
+                        country: "Canada",
+                        name: "A name",
+                        order_id: "order_id",
+                        phone: "1+ 418-323-4236",
+                        shipment_id: "shipment_id",
+                      },
+                      invoice_detail: {
+                        presigned_type: "presigned_type",
+                        presigned_url: "presigned_url",
+                        shipment_id: "shipment_id",
+                        success: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/shipments/{shipmentId}/track",
+              summary: "Get tracking details",
+              desc: "Fetches tracking details and status for the given shipmentId.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "shipmentId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Unique shipment identifier",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Track details retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    shipment: {
+                      detail: {
+                        awb_no: "awb_no",
+                        beneficiary_details: true,
+                        can_break: {},
+                        can_cancel: true,
+                        can_return: true,
+                        comment: "comment",
+                        custom_meta: [{}],
+                        delivery_date: "delivery_date",
+                        dp_name: "dp_name",
+                        need_help_url: "need_help_url",
+                        order_id: "order_id",
+                        order_type: "HomeDelivery",
+                        refund_details: {},
+                        return_meta: {},
+                        returnable_date: "returnable_date",
+                        shipment_created_at: "shipment_created_at",
+                        shipment_id: "shipment_id",
+                        affiliate_shipment_id: "affiliate_shipment_id",
+                        show_download_invoice: true,
+                        show_track_link: true,
+                        size_info: {},
+                        total_bags: 42,
+                        track_url: "track_url",
+                        traking_no: "traking_no",
+                        gstin_code: "gstin_code",
+                        shipment_created_ts: "shipment_created_ts",
+                        is_refund_config_enabled: true,
+                        meta: {},
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/shipments/{shipmentId}/bags/{bagId}/reasons",
+              summary: "Get shipment reasons for a bag",
+              desc: "Fetches the list of reasons for a specific bag within a shipment.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "shipmentId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Shipment ID",
+                },
+                {
+                  name: "bagId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Bag ID",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Shipment reasons retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    shipment: {
+                      shipment_reasons: {
+                        reasons: [
+                          {
+                            feedback_type: "bag",
+                            flow: "forward",
+                            priority: 5,
+                            reason_id: 84,
+                            reason_text: "Changed my mind",
+                            show_text_area: false,
+                          },
+                          {
+                            feedback_type: "bag",
+                            flow: "forward",
+                            priority: 6,
+                            reason_id: 85,
+                            reason_text: "Delivery address is wrong",
+                            show_text_area: false,
+                          },
+                          {
+                            feedback_type: "bag",
+                            flow: "forward",
+                            priority: 7,
+                            reason_id: 86,
+                            reason_text: "Found better price elsewhere",
+                            show_text_area: false,
+                          },
+                          {
+                            feedback_type: "bag",
+                            flow: "forward",
+                            priority: 8,
+                            reason_id: 87,
+                            reason_text: "Other reason",
+                            show_text_area: true,
+                          },
+                        ],
+                      },
+                      shipment_bag_reasons: {
+                        success: true,
+                        reasons: [
+                          {
+                            display_name: "Improper material",
+                            id: 105,
+                            qc_type: [],
+                            meta: {
+                              show_text_area: false,
+                            },
+                            reasons: [],
+                          },
+                          {
+                            display_name: "Better price found elsewhere",
+                            id: 107,
+                            qc_type: [],
+                            meta: {
+                              show_text_area: false,
+                            },
+                            reasons: [],
+                          },
+                          {
+                            display_name: "Stain found on product",
+                            id: 106,
+                            qc_type: [],
+                            meta: {
+                              show_text_area: false,
+                            },
+                            reasons: [],
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          id: "orders",
+          title: "Orders",
+          icon: "📋",
+          desc: "Order list, detail retrieval and cancellation — requires Bearer JWT.",
+          businessOverview:
+            "Orders are the source of truth for all commerce. This module provides a complete history of customer purchases, including current status (Placed, Confirmed, Cancelled). It supports customer support workflows by allowing orders to be listed, detailed, and cancelled when needed.",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/orders",
+              summary: "Get all orders",
+              businessContext: "Powers the 'My Orders' section of the user profile. It allows customers to view their purchase history, filter by date, and see the status of each order at a glance.",
+              desc: "Get all orders associated with a customer account. Returns paginated list of orders with filters.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "fromDate",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "The date from which the orders should be retrieved. For example, '2023-01-14' or '2023-01-14T00:00:00Z'.",
+                },
+                {
+                  name: "pageNo",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "The page number to navigate through the given set of results. Default value is 1. For example, 1, 2, or 3.",
+                },
+                {
+                  name: "pageSize",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "The number of items to retrieve in each page. Default value is 10. For example, 10, 20, or 50.",
+                },
+                {
+                  name: "status",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "A filter to retrieve orders by their current status such as 'placed', 'delivered' etc. For example, 1 for 'placed', 2 for 'confirmed', 10 for 'handed_over_to_dg', 114 for 'credit_note_generated'.",
+                },
+                {
+                  name: "toDate",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "The date till which the orders should be retrieved. For example, '2023-12-31' or '2023-12-31T23:59:59Z'.",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Orders retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    orders: {
+                      items: [
+                        {
+                          order_created_time: "order_created_time",
+                          order_created_ts: "order_created_ts",
+                          order_id: "order_id",
+                          total_shipments_in_order: 42,
+                          gstin_code: "gstin_code",
+                          meta: {},
+                        },
+                      ],
+                      page: {
+                        current: 42,
+                        has_next: true,
+                        item_total: 42,
+                        size: 42,
+                        type: "type",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/orders/{orderId}",
+              summary: "Get order by ID",
+              desc: "Get order details such as tracking details, shipment, store information using Fynd Order ID. For example, orderId: 'FY63C1FBA80195F734C0'.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "orderId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "The unique order ID",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Order details retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    order: {
+                      bags_for_reorder: [
+                        {
+                          item_id: 42,
+                          item_size: "item_size",
+                          quantity: 42,
+                          seller_id: 42,
+                          store_id: 42,
+                        },
+                      ],
+                      breakup_values: [
+                        {
+                          currency_code: "currency_code",
+                          currency_symbol: "currency_symbol",
+                          display: "display",
+                          name: "A name",
+                          value: 30.7,
+                        },
+                      ],
+                      order_created_time: "order_created_time",
+                      order_created_ts: "order_created_ts",
+                      order_id: "order_id",
+                      shipments: [
+                        {
+                          awb_no: "awb_no",
+                          beneficiary_details: true,
+                          can_break: {},
+                          can_cancel: true,
+                          can_return: true,
+                          comment: "comment",
+                          custom_meta: [{}],
+                          delivery_date: "delivery_date",
+                          dp_name: "dp_name",
+                          need_help_url: "need_help_url",
+                          order_id: "order_id",
+                          order_type: "HomeDelivery",
+                          refund_details: {},
+                          return_meta: {},
+                          returnable_date: "returnable_date",
+                          shipment_created_at: "shipment_created_at",
+                          shipment_id: "shipment_id",
+                          affiliate_shipment_id: "affiliate_shipment_id",
+                          show_download_invoice: true,
+                          show_track_link: true,
+                          size_info: {},
+                          total_bags: 42,
+                          track_url: "track_url",
+                          traking_no: "traking_no",
+                          gstin_code: "gstin_code",
+                          shipment_created_ts: "shipment_created_ts",
+                          is_refund_config_enabled: true,
+                          meta: {},
+                        },
+                      ],
+                      total_shipments_in_order: 42,
+                      user_info: {
+                        email: "test-email@yourcompany.com",
+                        first_name: "first_name",
+                        gender: "gender",
+                        last_name: "last_name",
+                        mobile: "mobile",
+                        name: "A name",
+                      },
+                      gstin_code: "gstin_code",
+                      meta: {},
+                      charges: [
+                        {
+                          code: "code",
+                          name: "A name",
+                          type: "type",
+                        },
+                      ],
+                      currency: {
+                        currency_code: "currency_code",
+                        currency_symbol: "currency_symbol",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "POST",
+              path: "/api/orders/{shipmentId}/cancel",
+              summary: "Cancel an order shipment",
+              desc: "Cancels a specific shipment of an order.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "shipmentId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "The unique shipment ID",
+                },
+              ],
+              bodyFields: [
+                {
+                  name: "reason_id",
+                  type: "number",
+                  required: true,
+                  desc: "The ID of the cancellation reason. Example: 1060",
+                },
+                {
+                  name: "reason_text",
+                  type: "string",
+                  required: true,
+                  desc: "Detailed text explaining the cancellation reason. Example: 'Product doesn\\'t meet expectations'",
+                },
+              ],
+              body: {
+                reason_id: 1060,
+                reason_text: "Product doesn't meet expectations",
+              },
+              response: {
+                200: {
+                  success: true,
+                  message: "Order cancelled successfully",
+                  statusCode: 200,
+                  data: {
+                    updateShipmentStatus: {
+                      statuses: [
+                        {
+                          shipments: [
+                            {
+                              status: 200,
+                              final_state: {
+                                cancelled_customer: "cancelled_customer",
+                                shipment_id: "17745881001251826295",
+                              },
+                              identifier: "17734044185721078457",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          id: "inventory",
+          title: "Inventory",
+          icon: "📊",
+          desc: "Inventory lookup — requires Bearer JWT.",
+          businessOverview:
+            "Knowing what's in stock is the backbone of any store. This section provides high-fidelity, real-time inventory counts across multiple locations. It distinguishes between 'Total Quantity' and 'Sellable Quantity' (items not yet reserved by other carts), ensuring you never oversell.",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/inventory",
+              summary: "Get inventories",
+              businessContext: "Crucial for back-office dashboards and supply chain monitoring. It allows admins to see which products are running low (qty_lt filter) and need restocking.",
+              desc: "Fetch inventory with filters like item_ids, store_ids, brand_ids, seller_identifiers, qty filters and date ranges.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "item_ids",
+                  in: "query",
+                  type: "integer[]",
+                  required: false,
+                  desc: "The Item Id of the product.",
+                },
+                {
+                  name: "brand_ids",
+                  in: "query",
+                  type: "integer[]",
+                  required: false,
+                  desc: "The Brand Id of products to fetch inventory.",
+                },
+                {
+                  name: "seller_identifiers",
+                  in: "query",
+                  type: "string[]",
+                  required: false,
+                  desc: "Unique seller_identifier of the product.",
+                },
+                {
+                  name: "timestamp",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Timestamp in UTC format (2020-07-23T10:27:50Z)",
+                },
+                {
+                  name: "page_size",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "The number of items to retrieve in each page. Default Value : 12",
+                },
+                {
+                  name: "page_id",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Page ID to retrieve next set of results.",
+                },
+                {
+                  name: "qty_gt",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "This field allows you to filter for inventories that have quantity greater than to the specified value based on qty_type filter.",
+                },
+                {
+                  name: "qty_lt",
+                  in: "query",
+                  type: "integer",
+                  required: false,
+                  desc: "This field allows you to filter for inventories that have a quantity less than to the specified value based on qty_type filter.",
+                },
+                {
+                  name: "qty_type",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "This field provides flexibility in selecting filter for inventory quantity counts and date queries. For example, you might use this field to specify 'total' or 'sellable' quantity.",
+                },
+                {
+                  name: "from_date",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Inventory updated on filter to get inventories greater then or equal to provided date based on qty_type value.",
+                },
+                {
+                  name: "to_date",
+                  in: "query",
+                  type: "string",
+                  required: false,
+                  desc: "Inventory updated on filter to get inventories less then or equal to provided date based on qty_type value.",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Inventory fetched successfully",
+                  statusCode: 200,
+                  data: {
+                    items: [
+                      {
+                        _custom_json: {},
+                        _id: "62d809eebeed53f4e27824b0",
+                        brand: {
+                          id: 2586,
+                        },
+                        company: {
+                          id: 3,
+                        },
+                        country_of_origin: "India",
+                        created_by: {
+                          user_id: "2a00eecae43d7e7f4340e7cf",
+                          username: "test_example_com_12345",
+                        },
+                        date_meta: {
+                          added_on_store: 1658325486,
+                          created_on: 1658325486,
+                          inventory_updated_on: 1658325486,
+                          modified_on: 1660913492,
+                        },
+                        dimension: {
+                          height: 30,
+                          is_default: true,
+                          length: 10,
+                          unit: "cm",
+                          width: 20,
+                        },
+                        discount_applied: null,
+                        expiration_date: "9998-01-30T23:59:00.000Z",
+                        fragile: false,
+                        fynd_article_code: "LS101269_11",
+                        fynd_item_code: "LS101269",
+                        identifier: {
+                          ean: "LSRS401269",
+                        },
+                        is_active: true,
+                        is_set: false,
+                        item_id: 7523701,
+                        manufacturer: {
+                          address:
+                            "POLARIS, 2ND FLOOR, ANDHERI, JSNLCA, MAHARASHTRA, THANE",
+                          is_default: true,
+                          name: "Test 21",
+                        },
+                        meta: {
+                          service: "Inventory Job",
+                        },
+                        modified_by: {
+                          user_id: "2a00eecae43d7e7f4340e7cf",
+                          username: "test_example_com_12345",
+                        },
+                        platforms: {
+                          fynd: false,
+                          uniket_wholesale: true,
+                        },
+                        price: {
+                          currency: "INR",
+                          effective: 3250,
+                          marked: 5000,
+                          transfer: 0,
+                          updated_at: "2022-07-20T13:58:06.122Z",
+                        },
+                        quantities: {
+                          sellable: {
+                            count: 100,
+                            updated_at: 1658325486,
+                          },
+                        },
+                        raw_meta: {
+                          fynd_identifier: "624_LSRS401269",
+                        },
+                        return_config: {
+                          returnable: true,
+                          time: 30,
+                          unit: "days",
+                        },
+                        seller_identifier: "LSRS401269",
+                        size: "11",
+                        stage: "verified",
+                        store: {
+                          id: 624,
+                        },
+                        tax_identifier: {
+                          tax_rule_id: "000000000000000000000001",
+                          hsn_code_id: "000000000000000000000001",
+                        },
+                        total_quantity: 100,
+                        track_inventory: true,
+                        trader: [
+                          {
+                            address: ["Load Galli, Mumbai"],
+                            name: "Load Company",
+                            type: "Importer",
+                          },
+                        ],
+                        uid: "624_LSRS401269",
+                        weight: {
+                          is_default: true,
+                          shipping: 40,
+                          unit: "gram",
+                        },
+                      },
+                      {
+                        _custom_json: {},
+                        _id: "62d809eebeed53f4e27824b2",
+                        brand: {
+                          id: 2586,
+                        },
+                        company: {
+                          id: 3,
+                        },
+                        country_of_origin: "India",
+                        created_by: {
+                          user_id: "2a00eecae43d7e7f4340e7cf",
+                          username: "test_example_com_12345",
+                        },
+                        date_meta: {
+                          added_on_store: 1658325486,
+                          created_on: 1658325486,
+                          inventory_updated_on: 1658325486,
+                          modified_on: 1660913492,
+                        },
+                        dimension: {
+                          height: 30,
+                          is_default: true,
+                          length: 10,
+                          unit: "cm",
+                          width: 20,
+                        },
+                        discount_applied: null,
+                        expiration_date: "9998-01-30T23:59:00.000Z",
+                        fragile: false,
+                        fynd_article_code: "LS101163_11",
+                        fynd_item_code: "LS101163",
+                        identifier: {
+                          ean: "LSRS401163",
+                        },
+                        is_active: true,
+                        is_set: false,
+                        item_id: 7523925,
+                        manufacturer: {
+                          address:
+                            "POLARIS, 2ND FLOOR, ANDHERI, JSNLCA, MAHARASHTRA, THANE",
+                          is_default: true,
+                          name: "Test 21",
+                        },
+                        meta: {
+                          service: "Inventory Job",
+                        },
+                        modified_by: {
+                          user_id: "2a00eecae43d7e7f4340e7cf",
+                          username: "test_example_com_12345",
+                        },
+                        platforms: {
+                          fynd: false,
+                          uniket_wholesale: true,
+                        },
+                        price: {
+                          currency: "INR",
+                          effective: 3250,
+                          marked: 5000,
+                          transfer: 0,
+                          updated_at: "2022-07-20T13:58:06.396Z",
+                        },
+                        quantities: {
+                          sellable: {
+                            count: 100,
+                            updated_at: 1658325486,
+                          },
+                        },
+                        raw_meta: {
+                          fynd_identifier: "624_LSRS401163",
+                        },
+                        return_config: {
+                          returnable: true,
+                          time: 30,
+                          unit: "days",
+                        },
+                        seller_identifier: "LSRS401163",
+                        size: "11",
+                        stage: "verified",
+                        store: {
+                          id: 624,
+                        },
+                        tax_identifier: {
+                          tax_rule_id: "000000000000000000000001",
+                          hsn_code_id: "000000000000000000000001",
+                        },
+                        total_quantity: 100,
+                        track_inventory: true,
+                        trader: [
+                          {
+                            address: ["Load Galli, Mumbai"],
+                            name: "Load Company",
+                            type: "Importer",
+                          },
+                        ],
+                        uid: "624_LSRS401163",
+                        weight: {
+                          is_default: true,
+                          shipping: 40,
+                          unit: "gram",
+                        },
+                      },
+                      {
+                        _custom_json: {},
+                        _id: "62d809eebeed53f4e27824b4",
+                        brand: {
+                          id: 2586,
+                        },
+                        company: {
+                          id: 3,
+                        },
+                        country_of_origin: "India",
+                        created_by: {
+                          user_id: "2a00eecae43d7e7f4340e7cf",
+                          username: "test_example_com_12345",
+                        },
+                        date_meta: {
+                          added_on_store: 1658325486,
+                          created_on: 1658325486,
+                          inventory_updated_on: 1658325486,
+                          modified_on: 1660913492,
+                        },
+                        dimension: {
+                          height: 30,
+                          is_default: true,
+                          length: 10,
+                          unit: "cm",
+                          width: 20,
+                        },
+                        discount_applied: null,
+                        expiration_date: "9998-01-30T23:59:00.000Z",
+                        fragile: false,
+                        fynd_article_code: "LS101173_11",
+                        fynd_item_code: "LS101173",
+                        identifier: {
+                          ean: "LSRS401173",
+                        },
+                        is_active: true,
+                        is_set: false,
+                        item_id: 7523691,
+                        manufacturer: {
+                          address:
+                            "POLARIS, 2ND FLOOR, ANDHERI, JSNLCA, MAHARASHTRA, THANE",
+                          is_default: true,
+                          name: "Test 21",
+                        },
+                        meta: {
+                          service: "Inventory Job",
+                        },
+                        modified_by: {
+                          user_id: "2a00eecae43d7e7f4340e7cf",
+                          username: "test_example_com_12345",
+                        },
+                        platforms: {
+                          fynd: false,
+                          uniket_wholesale: true,
+                        },
+                        price: {
+                          currency: "INR",
+                          effective: 3250,
+                          marked: 5000,
+                          transfer: 0,
+                          updated_at: "2022-07-20T13:58:06.635Z",
+                        },
+                        quantities: {
+                          sellable: {
+                            count: 100,
+                            updated_at: 1658325486,
+                          },
+                        },
+                        raw_meta: {
+                          fynd_identifier: "624_LSRS401173",
+                        },
+                        return_config: {
+                          returnable: true,
+                          time: 30,
+                          unit: "days",
+                        },
+                        seller_identifier: "LSRS401173",
+                        size: "11",
+                        stage: "verified",
+                        store: {
+                          id: 624,
+                        },
+                        tax_identifier: {
+                          tax_rule_id: "000000000000000000000001",
+                          hsn_code_id: "000000000000000000000001",
+                        },
+                        total_quantity: 100,
+                        track_inventory: true,
+                        trader: [
+                          {
+                            address: ["Load Galli, Mumbai"],
+                            name: "Load Company",
+                            type: "Importer",
+                          },
+                        ],
+                        uid: "624_LSRS401173",
+                        weight: {
+                          is_default: true,
+                          shipping: 40,
+                          unit: "gram",
+                        },
+                      },
+                      {
+                        _custom_json: {},
+                        _id: "62d809eebeed53f4e27824b6",
+                        brand: {
+                          id: 2586,
+                        },
+                        company: {
+                          id: 3,
+                        },
+                        country_of_origin: "India",
+                        created_by: {
+                          user_id: "2a00eecae43d7e7f4340e7cf",
+                          username: "test_example_com_12345",
+                        },
+                        date_meta: {
+                          added_on_store: 1658325486,
+                          created_on: 1658325486,
+                          inventory_updated_on: 1658325486,
+                          modified_on: 1660913492,
+                        },
+                        dimension: {
+                          height: 30,
+                          is_default: true,
+                          length: 10,
+                          unit: "cm",
+                          width: 20,
+                        },
+                        discount_applied: null,
+                        expiration_date: "9998-01-30T23:59:00.000Z",
+                        fragile: false,
+                        fynd_article_code: "LS101198_11",
+                        fynd_item_code: "LS101198",
+                        identifier: {
+                          ean: "LSRS401198",
+                        },
+                        is_active: true,
+                        is_set: false,
+                        item_id: 7524280,
+                        manufacturer: {
+                          address:
+                            "POLARIS, 2ND FLOOR, ANDHERI, JSNLCA, MAHARASHTRA, THANE",
+                          is_default: true,
+                          name: "Test 21",
+                        },
+                        meta: {
+                          service: "Inventory Job",
+                        },
+                        modified_by: {
+                          user_id: "2a00eecae43d7e7f4340e7cf",
+                          username: "test_example_com_12345",
+                        },
+                        platforms: {
+                          fynd: false,
+                          uniket_wholesale: true,
+                        },
+                        price: {
+                          currency: "INR",
+                          effective: 3250,
+                          marked: 5000,
+                          transfer: 0,
+                          updated_at: "2022-07-20T13:58:06.898Z",
+                        },
+                        quantities: {
+                          sellable: {
+                            count: 100,
+                            updated_at: 1658325486,
+                          },
+                        },
+                        raw_meta: {
+                          fynd_identifier: "624_LSRS401198",
+                        },
+                        return_config: {
+                          returnable: true,
+                          time: 30,
+                          unit: "days",
+                        },
+                        seller_identifier: "LSRS401198",
+                        size: "11",
+                        stage: "verified",
+                        store: {
+                          id: 624,
+                        },
+                        tax_identifier: {
+                          tax_rule_id: "000000000000000000000001",
+                          hsn_code_id: "000000000000000000000001",
+                        },
+                        total_quantity: 100,
+                        track_inventory: true,
+                        trader: [
+                          {
+                            address: ["Load Galli, Mumbai"],
+                            name: "Load Company",
+                            type: "Importer",
+                          },
+                        ],
+                        uid: "624_LSRS401198",
+                        weight: {
+                          is_default: true,
+                          shipping: 40,
+                          unit: "gram",
+                        },
+                      },
+                    ],
+                    page: {
+                      has_next: true,
+                      has_previous: true,
+                      item_total: 1714,
+                      next_id: "62d809eebeed53f4e27824b6",
+                      type: "cursor",
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          id: "invoice",
+          title: "Invoice",
+          icon: "🧾",
+          desc: "Invoice retrieval by shipment ID — requires Bearer JWT.",
+          businessOverview:
+            "The final step in the financial transaction. Invoices are legal documents required for taxation, returns, and customer records. This section allows for the generation and retrieval of standard invoices, e-way bills (for transport compliance), and e-invoices (for digital reporting).",
+          endpoints: [
+            {
+              method: "GET",
+              path: "/api/invoice/{shipmentId}",
+              summary: "Get invoice by Shipment ID",
+              businessContext: "Provides a downloadable PDF link for the customer. It includes the grand total, GST breakdown, and billing/shipping addresses as they were at the time of purchase.",
+              desc: "Retrieves the invoice document for a given shipment.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "shipmentId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Shipment ID",
+                },
+              ],
+              response: {
+                200: {
+                  success: true,
+                  message: "Invoice retrieved successfully",
+                  statusCode: 200,
+                  data: {
+                    shipment: {
+                      invoice_detail: {
+                        presigned_type: "GET",
+                        presigned_url: "presigned_url",
+                        shipment_id: "shipment_id",
+                        success: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              method: "GET",
+              path: "/api/invoice/{shipmentId}/{orderId}/ewaybill",
+              summary: "Get e-way bill",
+              desc: "Retrieves the e-way bill PDF for a given shipment and order. Streams PDF directly.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "shipmentId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Shipment ID",
+                },
+                {
+                  name: "orderId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Order ID",
+                },
+              ],
+              response: { 200: "PDF binary stream (application/pdf)" },
+            },
+            {
+              method: "GET",
+              path: "/api/invoice/{shipmentId}/{orderId}/e-invoice",
+              summary: "Get e-invoice",
+              desc: "Downloads the e-invoice PDF for a given shipment and order.",
+              auth: "Bearer JWT",
+              params: [
+                {
+                  name: "shipmentId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Shipment ID",
+                },
+                {
+                  name: "orderId",
+                  in: "path",
+                  type: "string",
+                  required: true,
+                  desc: "Order ID",
+                },
+              ],
+              response: { 200: "PDF binary stream (application/pdf)" },
+            },
+          ],
+        },
+      ];
+
+      // Auto-populate missing error responses for all endpoints
+      API_SECTIONS.forEach((section) => {
+        section.endpoints.forEach((ep) => {
+          if (!ep.response) ep.response = {};
+          // If no 4xx error is defined, add the standard 400 error
+          if (!ep.response[400] && !ep.response[401] && !ep.response[403] && !ep.response[404]) {
+            ep.response[400] = commonError400;
+          }
+          // If no 500 error is defined, add the standard 500 error
+          if (!ep.response[500]) {
+            ep.response[500] = commonError500;
+          }
+        });
+      });
+
+      // Auto-populate x-cookie header for relevant customer-context sections
+      const customerContextSections = ["addresses", "cart", "orders", "shipments", "invoice"];
+      API_SECTIONS.forEach((section) => {
+        if (customerContextSections.includes(section.id)) {
+          section.endpoints.forEach((ep) => {
+            // Skip e-waybill and e-invoice endpoints as requested
+            if (ep.path.endsWith("/ewaybill") || ep.path.endsWith("/e-invoice")) {
+              return;
+            }
+            if (!ep.params) ep.params = [];
+            // Only add if not already present
+            if (!ep.params.some((p) => p.name === "x-cookie")) {
+              ep.params.unshift({
+                name: "x-cookie",
+                in: "header",
+                type: "string",
+                required: false,
+                desc: "Session cookie obtained from registration/login (format: f.session=<cookie_value>)",
+              });
+            }
+          });
+        }
+      });
+
+      // ── RENDER ──────────────────────────────────────────────────────
+      const mainEl = document.getElementById("mainContent");
+      const navEl = document.getElementById("navLinks");
+
+      function syntaxHighlight(obj, indent = 0) {
+        if (typeof obj === "string" && indent === 0)
+          return `<span class="str">"${escHtml(obj)}"</span>`;
+        const json = JSON.stringify(obj, null, 2);
+        return json.replace(
+          /("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+          (m) => {
+            let cls = "num";
+            if (/^"/.test(m)) cls = /:$/.test(m) ? "key" : "str";
+            else if (/true|false/.test(m)) cls = "bool";
+            else if (/null/.test(m)) cls = "null";
+            return `<span class="${cls}">${m}</span>`;
+          },
+        );
+      }
+      function escHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function makeId(section, idx) {
+        return `${section.id}-${idx}`;
+      }
+
+      API_SECTIONS.forEach((section) => {
+        // NAV
+        let navHtml = `<h3>${section.title}</h3>`;
+        section.endpoints.forEach((ep, i) => {
+          const dotCls = "dot-" + ep.method.toLowerCase();
+          navHtml += `<a class="nav-link" href="#${makeId(section, i)}" data-search="${ep.method} ${ep.path} ${ep.summary}"><span class="method-dot ${dotCls}"></span>${ep.summary}</a>`;
+        });
+        navEl.innerHTML += navHtml;
+
+        // MAIN
+        let html = `<section class="api-section" id="section-${section.id}">
+    <div class="section-title"><span class="icon">${section.icon}</span>${section.title}</div>
+    <div class="section-desc">${section.desc}</div>`;
+
+        if (section.businessOverview) {
+          html += `<div class="business-box">
+            <span class="business-label">Business Overview</span>
+            <div class="business-text">${section.businessOverview}</div>
+          </div>`;
+        }
+        section.endpoints.forEach((ep, i) => {
+          const eid = makeId(section, i);
+          html += `<div class="endpoint" id="${eid}">
+      <div class="endpoint-header" onclick="toggleEndpoint(this)">
+        <span class="method-badge method-${ep.method}">${ep.method}</span>
+        <span class="endpoint-path">${ep.path}</span>
+        <span class="endpoint-summary">${ep.summary}</span>
+        <svg class="endpoint-toggle" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="endpoint-body">
+        <p class="desc">${ep.desc}</p>`;
+
+          if (ep.businessContext) {
+            html += `<div class="endpoint-business-context">
+              <strong>Business Context</strong>
+              <p>${ep.businessContext}</p>
+            </div>`;
+          }
+          if (ep.auth) html += `<div class="auth-badge">🔒 ${ep.auth}</div>`;
+          if (ep.params && ep.params.length) {
+            html += `<h4>Parameters</h4><table class="param-table"><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Description</th></tr></thead><tbody>`;
+            ep.params.forEach((p) => {
+              html += `<tr><td><span class="param-name">${p.name}</span>${p.required ? '<span class="required">*</span>' : ""}</td><td>${p.in}</td><td class="param-type">${p.type}</td><td>${p.desc}</td></tr>`;
+            });
+            html += "</tbody></table>";
+          }
+          if (ep.bodyFields && ep.bodyFields.length) {
+            html += `<h4>Request Body Schema</h4><table class="param-table"><thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>`;
+            ep.bodyFields.forEach((f) => {
+              html += `<tr><td><span class="param-name">${f.name}</span></td><td class="param-type">${f.type}</td><td>${f.required ? '<span class="required" style="font-size:.78rem">Yes</span>' : '<span style="color:var(--text3);font-size:.78rem">No</span>'}</td><td>${f.desc}</td></tr>`;
+            });
+            html += "</tbody></table>";
+          }
+          if (ep.body) {
+            html += `<h4>Request Body Example</h4><div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copy</button>${syntaxHighlight(ep.body)}</div>`;
+          }
+          html += `<h4>Response</h4>`;
+          const resp = ep.response;
+          const statusCodes = Object.keys(resp).sort();
+
+          if (statusCodes.length > 0) {
+            html += `<div class="resp-tabs">`;
+            statusCodes.forEach((code, idx) => {
+              const cls = code.startsWith("2") ? "s2xx" : code.startsWith("4") ? "s4xx" : "s5xx";
+              const label = code.startsWith("4") ? "4xx" : code.startsWith("5") ? "500" : code;
+              html += `<span class="resp-tab ${idx === 0 ? "active" : ""} ${cls}" onclick="switchTab(this, '${eid}', '${code}')">${label}</span>`;
+            });
+            html += `</div>`;
+
+            statusCodes.forEach((code, idx) => {
+              html += `<div id="res-${eid}-${code}" class="code-block" style="display: ${idx === 0 ? "block" : "none"}">
+                ${!(code === "200" && typeof resp[code] === "string") ? '<button class="copy-btn" onclick="copyCode(this)">Copy</button>' : ""}
+                ${typeof resp[code] === "string" ? escHtml(resp[code]) : syntaxHighlight(resp[code])}
+              </div>`;
+            });
+          }
+          html += `</div></div>`;
+        });
+        html += "</section>";
+        mainEl.innerHTML += html;
+      });
+
+      // ── INTERACTIONS ────────────────────────────────────────────────
+      function toggleEndpoint(header) {
+        header.parentElement.classList.toggle("open");
+      }
+      function switchTab(btn, eid, code) {
+        const group = btn.parentElement;
+        group.querySelectorAll(".resp-tab").forEach((t) => t.classList.remove("active"));
+        btn.classList.add("active");
+
+        const parent = group.parentElement;
+        // Only hide code blocks that are part of the response section (starting with 'res-')
+        parent.querySelectorAll(`.code-block[id^="res-${eid}-"]`).forEach((b) => (b.style.display = "none"));
+        document.getElementById(`res-${eid}-${code}`).style.display = "block";
+      }
+      function copyCode(btn) {
+        const block = btn.parentElement;
+        const text = block.innerText.replace("Copy", "").trim();
+        navigator.clipboard.writeText(text);
+        btn.textContent = "Copied!";
+        setTimeout(() => (btn.textContent = "Copy"), 1500);
+      }
+
+      // Sidebar nav click — smooth scroll with offset & open accordion
+      document.querySelectorAll(".nav-link").forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          const targetId = this.getAttribute("href").substring(1);
+          const target = document.getElementById(targetId);
+          if (target) {
+            // Open the accordion
+            if (target.classList.contains("endpoint")) {
+              target.classList.add("open");
+            }
+
+            const offset = 24;
+            const top =
+              target.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top, behavior: "smooth" });
+            
+            // Update URL hash without jump
+            history.pushState(null, null, `#${targetId}`);
+          }
+        });
+      });
+
+      // Handle hash-based opening on load
+      window.addEventListener("load", () => {
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+          const target = document.getElementById(hash);
+          if (target) {
+            // Open the accordion if it's an endpoint
+            if (target.classList.contains("endpoint")) {
+               target.classList.add("open");
+            }
+            
+            // Allow some time for the accordion to render/open before scrolling
+            setTimeout(() => {
+              const offset = 24;
+              const top = target.getBoundingClientRect().top + window.scrollY - offset;
+              window.scrollTo({ top, behavior: "smooth" });
+            }, 200);
+          }
+        }
+      });
+
+      // Search
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", function () {
+          const q = this.value.toLowerCase();
+          document
+            .querySelectorAll(".nav-link")
+            .forEach(
+              (l) =>
+                (l.style.display = l.dataset.search.toLowerCase().includes(q)
+                  ? ""
+                  : "none"),
+            );
+          document.querySelectorAll(".endpoint").forEach((el) => {
+            const txt = (
+              el.querySelector(".endpoint-path")?.textContent +
+              " " +
+              el.querySelector(".endpoint-summary")?.textContent
+            ).toLowerCase();
+            el.style.display = txt.includes(q) ? "" : "none";
+          });
+        });
+
+      // Back to top
+      const backTop = document.getElementById("backTop");
+      window.addEventListener("scroll", () =>
+        backTop.classList.toggle("show", window.scrollY > 400),
+      );
+      backTop.addEventListener("click", () =>
+        window.scrollTo({ top: 0, behavior: "smooth" }),
+      );
+
+      // Active nav link — highlight on scroll & scroll sidebar into view
+      function setActiveNav(id) {
+        document
+          .querySelectorAll(".nav-link")
+          .forEach((l) => l.classList.remove("active"));
+        const link = document.querySelector(`.nav-link[href="#${id}"]`);
+        if (link) {
+          link.classList.add("active");
+          link.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              setActiveNav(e.target.id);
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "-20px 0px -70% 0px" },
+      );
+      document
+        .querySelectorAll(".endpoint")
+        .forEach((el) => observer.observe(el));
+
+      // Also observe section headers for better tracking
+      document
+        .querySelectorAll(".api-section")
+        .forEach((el) => observer.observe(el));
+
+      // Theme Toggle Logic
+      const themeToggle = document.getElementById("themeToggle");
+      themeToggle.addEventListener("click", () => {
+        const currentTheme =
+          document.documentElement.getAttribute("data-theme");
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+      });
+    </script>
+  </body>
+</html>
